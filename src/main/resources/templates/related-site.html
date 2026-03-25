@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Related Sites - SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .site-container {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            margin-top: 50px;
+            flex-wrap: wrap;
+        }
+
+        .site-card {
+            width: 400px;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            background: #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .site-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+            border-color: #003366;
+        }
+
+        .site-logo {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+
+        .site-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .site-desc {
+            font-size: 0.9rem;
+            color: #777;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='related-site')}"></header>
+
+<main class="container">
+    <h1 class="section-title" style="text-align: left;">Related Sites</h1>
+    <p style="color: #666; margin-bottom: 40px;">강남대학교 및 관련 학부 홈페이지로 바로가기</p>
+
+    <div class="site-container">
+        <a href="https://web.kangnam.ac.kr/" target="_blank" class="site-card">
+            <img th:src="@{/images/kangnam_logo.jpeg}" alt="강남대학교" class="site-logo">
+            <div class="site-name">강남대학교</div>
+            <div class="site-desc">Kangnam University Official Site</div>
+        </a>
+
+        <a href="https://sae.kangnam.ac.kr/" target="_blank" class="site-card">
+            <img th:src="@{/images/cse_logo.jpeg}" alt="컴퓨터공학부" class="site-logo">
+            <div class="site-name">컴퓨터공학부</div>
+            <div class="site-desc">Department of Computer Science</div>
+        </a>
+    </div>
+</main>
+</body>
+</html>

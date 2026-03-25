@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .login-wrapper {
+            display: flex; justify-content: center; align-items: center;
+            height: calc(100vh - 80px); background-color: #f9f9f9;
+        }
+        .login-card {
+            background: #fff; padding: 40px; border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px;
+        }
+        .login-card h2 { text-align: center; margin-bottom: 30px; color: #003366; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .input-group input {
+            width: 100%; padding: 12px; border: 1px solid #ddd;
+            border-radius: 6px; box-sizing: border-box;
+        }
+        .login-btn {
+            width: 100%; padding: 14px; background-color: #003366; color: white;
+            border: none; border-radius: 6px; font-weight: bold; cursor: pointer;
+            font-size: 16px; margin-top: 10px;
+        }
+        .login-btn:hover { background-color: #002244; }
+        .error-msg { color: #d9534f; font-size: 14px; text-align: center; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='login')}"></header>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <h2>SEAL LAB Login</h2>
+
+        <div th:if="${param.error}" class="error-msg">
+            ID 또는 비밀번호가 올바르지 않습니다.
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="input-group">
+                <label>ID</label>
+                <input type="text" name="username" placeholder="Enter Admin ID" required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Enter Password" required>
+            </div>
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

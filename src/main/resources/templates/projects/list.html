@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Projects - SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .project-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .project-table th, .project-table td { padding: 15px; border-bottom: 1px solid #ddd; text-align: left; }
+        .project-table th { background-color: #f8f9fa; color: #003366; font-weight: bold; }
+        .project-table tr:hover { background-color: #fcfcfc; }
+
+        /* 관리자용 폼 스타일 */
+        .admin-form-box { display: none; background: #f9f9f9; padding: 20px; border: 1px solid #003366; border-radius: 8px; margin-bottom: 30px; }
+        .admin-form-box input { padding: 8px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-delete { color: #d9534f; cursor: pointer; background: none; border: none; }
+        .btn-edit { color: #003366; cursor: pointer; background: none; border: none; margin-right: 10px; }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='projects')}"></header>
+
+<main class="container">
+    <h1 class="section-title" style="text-align: left;">Research Projects</h1>
+
+    <div sec:authorize="isAuthenticated()" style="text-align: right; margin-bottom: 20px;">
+        <button onclick="toggleAddForm()" class="save-btn">+ 새 연구 과제 등록</button>
+    </div>
+
+    <div id="addProjectForm" class="admin-form-box">
+        <form th:action="@{/projects/admin/add}" method="post" style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <input type="text" name="title" placeholder="연구 과제명" style="flex: 3;" required>
+            <input type="text" name="period" placeholder="수행 기간 (ex. 2024.03 ~ 2026.02)" style="flex: 1;" required>
+            <input type="text" name="agency" placeholder="출연 기관" style="flex: 1;" required>
+            <button type="submit" class="save-btn">저장</button>
+        </form>
+    </div>
+
+    <table class="project-table">
+        <thead>
+        <tr>
+            <th style="width: 55%;">연구 과제명</th>
+            <th style="width: 20%;">수행 기간</th>
+            <th style="width: 15%;">출연 기관</th>
+            <th sec:authorize="isAuthenticated()" style="width: 10%;">관리</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="project : ${projects}">
+            <td th:text="${project.title}">AI 보안 고도화 연구</td>
+            <td th:text="${project.period}">2024.01 - 2025.12</td>
+            <td th:text="${project.agency}">한국연구재단</td>
+            <td sec:authorize="isAuthenticated()">
+                <div style="display:flex;">
+                    <form th:action="@{'/projects/admin/delete/' + ${project.id}}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                        <button type="submit" class="btn-delete">삭제</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(projects)}">
+            <td colspan="4" style="text-align: center; padding: 50px;">등록된 연구 과제가 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+
+<script>
+    function toggleAddForm() {
+        const form = document.getElementById('addProjectForm');
+        form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
+    }
+</script>
+</body>
+</html>
