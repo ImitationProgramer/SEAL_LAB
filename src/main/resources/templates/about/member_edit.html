@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Member - SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .edit-container { max-width: 600px; margin: 50px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #003366; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        .current-img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee; }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='member')}"></header>
+
+<main class="container">
+    <div class="edit-container">
+        <h2 style="margin-bottom: 30px; border-bottom: 2px solid #003366; padding-bottom: 10px;">Edit Member Profile</h2>
+
+        <form th:action="@{'/admin/member/edit/' + ${member.id}}" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>이름</label>
+                <input type="text" name="name" th:value="${member.name}" required>
+            </div>
+            <div class="form-group">
+                <label>학위 (Ex: 석사생)</label>
+                <input type="text" name="degree" th:value="${member.degree}">
+            </div>
+            <div class="form-group">
+                <label>역할 (Ex: Graduate Student)</label>
+                <input type="text" name="role" th:value="${member.role}">
+            </div>
+            <div class="form-group">
+                <label>학과/소속</label>
+                <input type="text" name="department" th:value="${member.department}">
+            </div>
+            <div class="form-group">
+                <label>이메일</label>
+                <input type="email" name="email" th:value="${member.email}">
+            </div>
+            <div class="form-group">
+                <label>Keywords</label>
+                <input type="text" name="keywords" th:value="${member.keywords}">
+            </div>
+
+            <div class="form-group">
+                <label>프로필 사진</label>
+                <div th:if="${member.imagePath != null}">
+                    <p style="font-size: 0.8rem; color: #666;">현재 사진:</p>
+                    <img th:src="${member.imagePath}" class="current-img">
+                </div>
+                <input type="file" name="file">
+                <p style="font-size: 0.75rem; color: #999; margin-top: 5px;">* 사진을 변경할 경우에만 파일을 선택해 주세요.</p>
+            </div>
+
+            <div style="text-align: right; margin-top: 30px;">
+                <a th:href="@{/about/member}" class="cancel-btn" style="text-decoration: none; padding: 10px 20px; display: inline-block;">Cancel</a>
+                <button type="submit" class="save-btn" style="padding: 10px 30px;">Update Member</button>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

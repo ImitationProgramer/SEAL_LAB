@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Publications - SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        /* 네비게이션 버튼 바 */
+        .pub-nav { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 40px 0; }
+        .nav-btn {
+            padding: 7px 15px; background: #f1f3f5; color: #495057;
+            text-decoration: none; border-radius: 20px; font-size: 0.85rem;
+            font-weight: 600; transition: 0.2s; border: 1px solid #ddd;
+        }
+        .nav-btn:hover { background: #003366; color: #fff; transform: translateY(-2px); }
+
+        /* 섹션 및 항목 스타일 */
+        .pub-category-section { margin-bottom: 70px; scroll-margin-top: 100px; }
+        .pub-category-title {
+            font-size: 1.6rem; color: #003366; border-bottom: 3px solid #003366;
+            padding-bottom: 10px; margin-bottom: 25px; font-weight: 800;
+        }
+        .pub-item {
+            margin-bottom: 25px; padding-left: 20px; position: relative;
+            border-left: 3px solid #eee; transition: 0.2s;
+        }
+        .pub-item:hover { border-left-color: #003366; }
+
+        .pub-title { font-weight: 700; font-size: 1.15rem; color: #333; margin-bottom: 5px; }
+        .pub-authors { color: #555; font-size: 0.95rem; }
+        .pub-venue { font-style: italic; color: #444; font-size: 0.95rem; }
+        .pub-date { color: #888; font-size: 0.9rem; margin-left: 10px; }
+
+        /* 관리자 액션 버튼 */
+        .pub-admin-btns {
+            margin-top: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+        .edit-link { color: #7ba6c0; text-decoration: underline; font-weight: 600; }
+        .delete-btn-text {
+            color: #ff4d4d; background: none; border: none; cursor: pointer;
+            text-decoration: underline; font-weight: 600; padding: 0;
+        }
+        .btn-divider { color: #ddd; }
+
+        /* 관리자용 추가 폼 */
+        .add-pub-box { background: #f8f9fa; padding: 25px; border-radius: 8px; margin-bottom: 40px; border: 1px solid #ddd; }
+
+        html { scroll-behavior: smooth; } /* 부드러운 스크롤 효과 */
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='publications')}"></header>
+
+<main class="container">
+    <h1 class="section-title" style="text-align: left; margin-bottom: 10px;">Publications</h1>
+
+    <nav class="pub-nav">
+        <a th:each="cat : ${categories}" th:href="'#section-' + ${cat.name()}"
+           class="nav-btn" th:text="${cat.displayName}">Category</a>
+    </nav>
+
+    <div sec:authorize="isAuthenticated()" class="add-pub-box">
+        <h3 style="margin-bottom:15px; color: #003366;">+ Add New Publication / Patent</h3>
+        <form th:action="@{/admin/publications/add}" method="post" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <select name="category" required style="grid-column: span 2; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                <option th:each="cat : ${categories}" th:value="${cat.name()}" th:text="${cat.displayName}"></option>
+            </select>
+            <input type="text" name="title" placeholder="Paper/Patent Title" required style="grid-column: span 2; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <input type="text" name="authors" placeholder="Authors (e.g. Gildong Hong, Jungsoo Park*)" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <input type="text" name="venue" placeholder="Journal / Conference / Patent Office" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <input type="date" name="publishDate" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <input type="text" name="link" placeholder="Link (URL, optional)" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <button type="submit" class="save-btn" style="grid-column: span 2; padding: 12px; margin-top: 5px; cursor: pointer;">Save Publication</button>
+        </form>
+    </div>
+
+    <div th:each="cat : ${categories}" class="pub-category-section" th:id="'section-' + ${cat.name()}">
+        <h2 class="pub-category-title" th:text="${cat.displayName}">Category Name</h2>
+
+        <div th:if="${groupedPubs.get(cat.name()).isEmpty()}" style="color: #bbb; padding: 15px; font-style: italic;">
+            No records found in this category.
+        </div>
+
+        <div th:each="pub : ${groupedPubs.get(cat.name())}" class="pub-item">
+            <div class="pub-title">
+                <a th:if="${pub.link != null and !pub.link.isEmpty()}" th:href="${pub.link}" target="_blank" th:text="${pub.title}" style="color: inherit; text-decoration: none;">Title</a>
+                <span th:unless="${pub.link != null and !pub.link.isEmpty()}" th:text="${pub.title}">Title</span>
+            </div>
+            <div class="pub-authors" th:text="${pub.authors}">Authors</div>
+            <div>
+                <span class="pub-venue" th:text="${pub.venue}">Venue</span>
+                <span class="pub-date" th:text="${#temporals.format(pub.publishDate, 'yyyy.MM')}">2026.03</span>
+            </div>
+
+            <div sec:authorize="isAuthenticated()" class="pub-admin-btns">
+                <a th:href="@{'/admin/publications/edit/' + ${pub.id}}" class="edit-link">Edit</a>
+                <span class="btn-divider">|</span>
+                <form th:action="@{'/admin/publications/delete/' + ${pub.id}}" method="post" style="display:inline;">
+                    <button type="submit" class="delete-btn-text" onclick="return confirm('정말 삭제하시겠습니까?')">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

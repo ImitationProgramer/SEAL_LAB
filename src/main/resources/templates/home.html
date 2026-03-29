@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+    <style>
+        /* --- 연구실 소개 (Intro) 섹션 스타일 --- */
+        .intro-container {
+            margin-top: -40px;
+            position: relative;
+            z-index: 20;
+            margin-bottom: 60px;
+        }
+        .intro-box {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border-top: 4px solid #003366;
+        }
+        .intro-header {
+            position: relative;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* 제목: 중앙 정렬 및 짙은 검은색 */
+        .intro-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #000;
+            margin: 0;
+            text-align: center;
+        }
+        .intro-content-view {
+            line-height: 1.8;
+            color: #444;
+            font-size: 1.1rem;
+            word-break: keep-all;
+        }
+        .edit-link-container {
+            position: absolute;
+            right: 0;
+        }
+        .edit-link {
+            font-size: 0.85rem;
+            color: #7ba6c0;
+            font-weight: 600;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        /* --- 편집 모드 스타일 --- */
+        #editor-container {
+            display: none;
+            margin-top: 20px;
+        }
+        #introQuill {
+            height: 300px;
+            margin-bottom: 15px;
+        }
+
+        /* --- 뉴스 섹션 스타일 --- */
+        .news-header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .delete-btn {
+            color: #ff4d4d;
+            border: 1px solid #ff4d4d;
+            background: transparent;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-right: 15px;
+        }
+        .delete-btn:hover {
+            background-color: #ff4d4d;
+            color: #fff;
+        }
+        .news-content-inner {
+            line-height: 1.6;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='home')}"></header>
+
+<main>
+    <section class="hero">
+        <canvas id="heroCanvas"></canvas>
+        <div class="hero-content">
+            <h1 class="hero-text">
+                <span>S</span>ecurity <span>E</span>ngineering and <span>A</span>nalysis <span>L</span>ab
+            </h1>
+            <div class="hero-line"></div>
+        </div>
+    </section>
+
+    <section class="intro-container container">
+        <div class="intro-box">
+            <div class="intro-header">
+                <h2 class="intro-title">About SEAL</h2>
+                <div sec:authorize="isAuthenticated()" class="edit-link-container">
+                    <a href="javascript:void(0)" onclick="toggleEditMode()" class="edit-link" id="editBtn">Edit Intro</a>
+                </div>
+            </div>
+
+            <div id="view-container">
+                <div class="intro-content-view" id="displayContent"
+                     th:utext="${labIntro != null ? labIntro.content : '연구실 소개 내용을 등록해주세요.'}">
+                    <p>Security Engineering and Analysis Lab(SEAL: 봉인)은 정보보안 분야에서 연구와 분석을 수행하는 연구실입니다.</p>
+                </div>
+            </div>
+
+            <div id="editor-container">
+                <div id="introQuill"></div>
+                <div style="text-align: right; gap: 10px; display: flex; justify-content: flex-end;">
+                    <button type="button" onclick="toggleEditMode()" style="background:#eee; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Cancel</button>
+                    <button type="button" onclick="saveIntro()" style="background:#003366; color:white; border:none; padding:8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="news-container container">
+        <h2 class="section-title">Main News</h2>
+        <div sec:authorize="isAuthenticated()" class="admin-action">
+            <a th:href="@{/admin/news/add}" class="auth-link" style="font-size: 0.9rem; padding: 6px 12px;">+ 뉴스 추가하기</a>
+        </div>
+
+        <div class="news-list">
+            <div th:each="news, iterStat : ${newsList}" class="news-item" th:classappend="${iterStat.first} ? 'active'">
+                <div class="news-header-container">
+                    <button class="news-header" onclick="toggleNews(this)" style="flex-grow: 1;">
+                        <span th:text="${news.title}">뉴스 제목</span>
+                    </button>
+                    <div sec:authorize="isAuthenticated()">
+                        <form th:action="@{/admin/news/delete/{id}(id=${news.id})}" method="post" onsubmit="return confirm('이 뉴스를 정말 삭제하시겠습니까?');">
+                            <button type="submit" class="delete-btn">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="news-content">
+                    <div class="news-content-inner" th:utext="${news.content}"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script th:src="@{/js/hero_canvas.js}"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
+<script th:inline="javascript">
+    /* <![CDATA[ */
+    // 1. 뉴스 아코디언 로직
+    function toggleNews(button) {
+        const currentItem = button.closest('.news-item');
+        if (currentItem) {
+            currentItem.classList.toggle('active');
+        }
+    }
+
+    // 2. 연구실 소개 인플레이스 편집 로직
+    let introQuill;
+
+    function toggleEditMode() {
+        const viewArea = document.getElementById('view-container');
+        const editArea = document.getElementById('editor-container');
+        const editBtn = document.getElementById('editBtn');
+
+        if (editArea.style.display === 'none') {
+            viewArea.style.display = 'none';
+            editArea.style.display = 'block';
+            editBtn.innerText = 'Viewing...';
+
+            if (!introQuill) {
+                introQuill = new Quill('#introQuill', {
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ 'color': [] }],
+                            ['clean']
+                        ]
+                    },
+                    theme: 'snow'
+                });
+            }
+            introQuill.root.innerHTML = document.getElementById('displayContent').innerHTML;
+        } else {
+            viewArea.style.display = 'block';
+            editArea.style.display = 'none';
+            editBtn.innerText = 'Edit Intro';
+        }
+    }
+
+    function saveIntro() {
+        const content = introQuill.root.innerHTML;
+
+        // 인텔리제이 에러 방지용 CSRF 토큰 처리
+        const csrfToken = /*[[${_csrf?.token}]]*/ '';
+        const csrfHeader = /*[[${_csrf?.headerName}]]*/ 'X-CSRF-TOKEN';
+
+        fetch('/admin/intro/edit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                [csrfHeader]: csrfToken
+            },
+            body: 'content=' + encodeURIComponent(content)
+        })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('displayContent').innerHTML = content;
+                    toggleEditMode();
+                    alert('연구실 소개가 성공적으로 수정되었습니다.');
+                } else {
+                    alert('저장 중 오류가 발생했습니다.');
+                }
+            });
+    }
+    /* ]]> */
+</script>
+</body>
+</html>

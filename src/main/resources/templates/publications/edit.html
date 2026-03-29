@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Publication - SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .edit-box { max-width: 700px; margin: 60px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #003366; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='publications')}"></header>
+
+<main class="container">
+    <div class="edit-box">
+        <h2 style="margin-bottom: 30px; border-bottom: 2px solid #003366; padding-bottom: 10px;">Edit Publication</h2>
+
+        <form th:action="@{'/admin/publications/edit/' + ${pub.id}}" method="post">
+            <div class="form-group">
+                <label>Category</label>
+                <select name="category" required>
+                    <option th:each="cat : ${categories}"
+                            th:value="${cat.name()}"
+                            th:text="${cat.displayName}"
+                            th:selected="${pub.category == cat}"></option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" name="title" th:value="${pub.title}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Authors</label>
+                <input type="text" name="authors" th:value="${pub.authors}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Venue (Journal / Conference / Patent Office)</label>
+                <input type="text" name="venue" th:value="${pub.venue}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Publish Date</label>
+                <input type="date" name="publishDate" th:value="${pub.publishDate}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Link (URL)</label>
+                <input type="text" name="link" th:value="${pub.link}">
+            </div>
+
+            <div style="text-align: right; margin-top: 30px;">
+                <a th:href="@{/publications}" class="cancel-btn" style="text-decoration: none; padding: 12px 25px; display: inline-block;">Cancel</a>
+                <button type="submit" class="save-btn" style="padding: 12px 40px;">Update Changes</button>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>
