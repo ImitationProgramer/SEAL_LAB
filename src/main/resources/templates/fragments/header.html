@@ -32,11 +32,16 @@
         </nav>
 
         <div class="auth-box">
-            <a sec:authorize="isAnonymous()" th:href="@{/login}" class="auth-link">Login</a>
+            <th:block sec:authorize="isAnonymous()">
+                <a th:href="@{/signup}" class="auth-link signup-btn">Sign Up</a>
+                <a th:href="@{/login}" class="auth-link">Login</a>
+            </th:block>
 
             <div sec:authorize="isAuthenticated()" class="user-status">
                 <span class="user-name">
-                    <span sec:authentication="name">Admin</span>님
+                    <span th:if="${#authorization.expression('hasRole(''ADMIN'')')}" class="role-badge admin">ADMIN</span>
+                    <span th:if="${#authorization.expression('hasRole(''MEMBER'')')}" class="role-badge member">MEMBER</span>
+                    <span sec:authentication="name">User</span>님
                 </span>
                 <form th:action="@{/logout}" method="post" style="display: inline;">
                     <button type="submit" class="logout-btn">Logout</button>
@@ -46,88 +51,58 @@
     </div>
 
     <style>
-        /* --- 드롭다운 및 화살표 애니메이션 --- */
-        .nav-item.dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        /* 화살표 아이콘 (CSS 삼각형) */
+        /* --- 기존 스타일 유지 및 추가 --- */
+        .nav-item.dropdown { position: relative; display: inline-block; }
         .arrow-icon {
-            display: inline-block;
-            width: 0;
-            height: 0;
-            margin-left: 6px;
-            vertical-align: middle;
-            border-top: 5px solid currentColor; /* 부모 글자색을 따라감 */
-            border-right: 5px solid transparent;
-            border-left: 5px solid transparent;
-            transition: transform 0.3s ease; /* 회전 애니메이션 속도 */
+            display: inline-block; width: 0; height: 0; margin-left: 6px;
+            vertical-align: middle; border-top: 5px solid currentColor;
+            border-right: 5px solid transparent; border-left: 5px solid transparent;
+            transition: transform 0.3s ease;
         }
+        .nav-item.dropdown:hover .arrow-icon { transform: rotate(180deg); }
 
-        /* 마우스 호버 시 화살표 회전 (180도) */
-        .nav-item.dropdown:hover .arrow-icon {
-            transform: rotate(180deg);
-        }
-
-        /* 드롭다운 메뉴 스타일 */
         .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #ffffff;
-            min-width: 140px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
-            z-index: 100;
-            border-radius: 4px;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            overflow: hidden;
+            display: none; position: absolute; background-color: #ffffff;
+            min-width: 140px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+            z-index: 100; border-radius: 4px; top: 100%; left: 50%;
+            transform: translateX(-50%); overflow: hidden;
         }
-
         .dropdown-content a {
-            color: #333;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            font-size: 0.9rem;
-            transition: background 0.2s;
+            color: #333; padding: 12px 16px; text-decoration: none;
+            display: block; font-size: 0.9rem; transition: background 0.2s;
+        }
+        .dropdown-content a:hover { background-color: #f1f1f1; color: #003366; }
+        .nav-item.dropdown:hover .dropdown-content { display: block; }
+        .sub-active { font-weight: bold; color: #003366 !important; background-color: #f8f9fa; }
+
+        /* --- 신규 추가: 버튼 및 배지 스타일 --- */
+        .signup-btn {
+            border-color: #7ba6c0 !important;
+            color: #7ba6c0 !important;
+            margin-right: 8px;
+        }
+        .signup-btn:hover {
+            background-color: #7ba6c0 !important;
+            color: #fff !important;
         }
 
-        .dropdown-content a:hover {
-            background-color: #f1f1f1;
-            color: #003366;
-        }
-
-        /* 호버 시 드롭다운 표시 */
-        .nav-item.dropdown:hover .dropdown-content {
-            display: block;
-        }
-
-        /* 서브 메뉴 활성화 스타일 */
-        .sub-active {
-            font-weight: bold;
-            color: #003366 !important;
-            background-color: #f8f9fa;
-        }
-
-        /* 로그아웃 버튼 스타일 */
-        .logout-btn {
-            background: none;
-            border: 1px solid #ccc;
-            color: #666;
-            padding: 4px 10px;
+        .role-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            margin-left: 10px;
-            transition: all 0.2s;
+            margin-right: 5px;
+            font-weight: 800;
+            vertical-align: middle;
         }
+        .role-badge.admin { background-color: #ff4d4d; color: #fff; }
+        .role-badge.member { background-color: #7ba6c0; color: #fff; }
 
-        .logout-btn:hover {
-            background: #666;
-            color: #fff;
+        .logout-btn {
+            background: none; border: 1px solid #ccc; color: #666;
+            padding: 4px 10px; border-radius: 4px; font-size: 0.8rem;
+            cursor: pointer; margin-left: 10px; transition: all 0.2s;
         }
+        .logout-btn:hover { background: #666; color: #fff; }
     </style>
 </header>
 </html>

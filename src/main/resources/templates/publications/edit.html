@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Edit Publication - SEAL LAB</title>
@@ -9,13 +10,20 @@
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #003366; }
         .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
+
+        /* 제로트러스트 접근 제한 안내 스타일 (통일성 유지) */
+        .denied-container { text-align: center; padding: 100px 20px; }
+        .denied-icon { font-size: 5rem; color: #ff4d4d; margin-bottom: 20px; }
+        .denied-title { font-size: 2rem; font-weight: 800; color: #333; margin-bottom: 10px; }
+        .denied-msg { color: #666; margin-bottom: 30px; line-height: 1.6; }
     </style>
 </head>
 <body>
 <header th:replace="~{fragments/header :: headerFragment(activeMenu='publications')}"></header>
 
 <main class="container">
-    <div class="edit-box">
+
+    <div sec:authorize="hasRole('ADMIN')" class="edit-box">
         <h2 style="margin-bottom: 30px; border-bottom: 2px solid #003366; padding-bottom: 10px;">Edit Publication</h2>
 
         <form th:action="@{'/admin/publications/edit/' + ${pub.id}}" method="post">
@@ -56,10 +64,21 @@
 
             <div style="text-align: right; margin-top: 30px;">
                 <a th:href="@{/publications}" class="cancel-btn" style="text-decoration: none; padding: 12px 25px; display: inline-block;">Cancel</a>
-                <button type="submit" class="save-btn" style="padding: 12px 40px;">Update Changes</button>
+                <button type="submit" class="save-btn" style="padding: 12px 40px; cursor: pointer; font-weight: bold;">Update Changes</button>
             </div>
         </form>
     </div>
+
+    <div sec:authorize="!hasRole('ADMIN')" class="denied-container">
+        <div class="denied-icon">🚫</div>
+        <h2 class="denied-title">Access Denied</h2>
+        <p class="denied-msg">
+            학술 실적을 수정할 수 있는 권한이 없습니다. <br>
+            관리자 계정으로 로그인하시거나, 보안 신뢰 점수(Trust Score)를 확인해 주세요.
+        </p>
+        <a th:href="@{/publications}" class="auth-link">Back to List</a>
+    </div>
+
 </main>
 </body>
 </html>

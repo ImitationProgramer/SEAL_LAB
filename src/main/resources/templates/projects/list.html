@@ -11,10 +11,26 @@
         .project-table tr:hover { background-color: #fcfcfc; }
 
         /* 관리자용 폼 스타일 */
-        .admin-form-box { display: none; background: #f9f9f9; padding: 20px; border: 1px solid #003366; border-radius: 8px; margin-bottom: 30px; }
-        .admin-form-box input { padding: 8px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        .btn-delete { color: #d9534f; cursor: pointer; background: none; border: none; }
-        .btn-edit { color: #003366; cursor: pointer; background: none; border: none; margin-right: 10px; }
+        .admin-form-box {
+            display: none; background: #f9f9f9; padding: 25px;
+            border: 1px solid #003366; border-radius: 12px;
+            margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .admin-form-box input {
+            padding: 12px; border: 1px solid #ccc; border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        .btn-delete {
+            color: #d9534f; cursor: pointer; background: none;
+            border: none; font-weight: 600; text-decoration: underline;
+        }
+        .btn-delete:hover { color: #c9302c; }
+
+        /* 엠블럼/배지 스타일 (필요시) */
+        .trust-badge {
+            font-size: 0.75rem; background: #eef2f7; color: #003366;
+            padding: 4px 8px; border-radius: 4px; margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -23,43 +39,46 @@
 <main class="container">
     <h1 class="section-title" style="text-align: left;">Research Projects</h1>
 
-    <div sec:authorize="isAuthenticated()" style="text-align: right; margin-bottom: 20px;">
-        <button onclick="toggleAddForm()" class="save-btn">+ 새 연구 과제 등록</button>
+    <div sec:authorize="hasRole('ADMIN')" style="text-align: right; margin-bottom: 20px;">
+        <button onclick="toggleAddForm()" class="save-btn" style="cursor: pointer;">+ Register New Project</button>
     </div>
 
-    <div id="addProjectForm" class="admin-form-box">
+    <div id="addProjectForm" class="admin-form-box" sec:authorize="hasRole('ADMIN')">
+        <h3 style="margin-bottom:20px; color: #003366;">Add Research Project</h3>
         <form th:action="@{/projects/admin/add}" method="post" style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <input type="text" name="title" placeholder="연구 과제명" style="flex: 3;" required>
-            <input type="text" name="period" placeholder="수행 기간 (ex. 2024.03 ~ 2026.02)" style="flex: 1;" required>
-            <input type="text" name="agency" placeholder="출연 기관" style="flex: 1;" required>
-            <button type="submit" class="save-btn">저장</button>
+            <input type="text" name="title" placeholder="Project Title" style="flex: 3;" required>
+            <input type="text" name="period" placeholder="Period (e.g. 2024.03 ~ 2026.02)" style="flex: 1;" required>
+            <input type="text" name="agency" placeholder="Funding Agency" style="flex: 1;" required>
+            <button type="submit" class="save-btn" style="padding: 10px 30px; cursor: pointer;">Save</button>
         </form>
     </div>
 
     <table class="project-table">
         <thead>
         <tr>
-            <th style="width: 55%;">연구 과제명</th>
-            <th style="width: 20%;">수행 기간</th>
-            <th style="width: 15%;">출연 기관</th>
-            <th sec:authorize="isAuthenticated()" style="width: 10%;">관리</th>
+            <th style="width: 50%;">Project Title</th>
+            <th style="width: 25%;">Period</th>
+            <th style="width: 15%;">Agency</th>
+            <th sec:authorize="hasRole('ADMIN')" style="width: 10%;">Admin</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="project : ${projects}">
-            <td th:text="${project.title}">AI 보안 고도화 연구</td>
+            <td th:text="${project.title}">AI Security Enhancement Research</td>
             <td th:text="${project.period}">2024.01 - 2025.12</td>
-            <td th:text="${project.agency}">한국연구재단</td>
-            <td sec:authorize="isAuthenticated()">
-                <div style="display:flex;">
-                    <form th:action="@{'/projects/admin/delete/' + ${project.id}}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                        <button type="submit" class="btn-delete">삭제</button>
-                    </form>
-                </div>
+            <td th:text="${project.agency}">NRF</td>
+
+            <td sec:authorize="hasRole('ADMIN')">
+                <form th:action="@{'/projects/admin/delete/' + ${project.id}}" method="post"
+                      onsubmit="return confirm('이 연구 과제를 정말 삭제하시겠습니까?');">
+                    <button type="submit" class="btn-delete">Delete</button>
+                </form>
             </td>
         </tr>
         <tr th:if="${#lists.isEmpty(projects)}">
-            <td colspan="4" style="text-align: center; padding: 50px;">등록된 연구 과제가 없습니다.</td>
+            <td colspan="4" style="text-align: center; padding: 80px; color: #999;">
+                No research projects registered.
+            </td>
         </tr>
         </tbody>
     </table>
@@ -68,7 +87,9 @@
 <script>
     function toggleAddForm() {
         const form = document.getElementById('addProjectForm');
-        form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
+        if (form) {
+            form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
+        }
     }
 </script>
 </body>

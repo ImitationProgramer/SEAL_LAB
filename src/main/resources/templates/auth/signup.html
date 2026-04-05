@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .signup-wrapper {
+            max-width: 450px;
+            margin: 80px auto;
+            padding: 40px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border-top: 4px solid #003366;
+        }
+        .form-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #003366;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            border-color: #7ba6c0;
+            outline: none;
+        }
+        /* 에러 메시지 스타일 */
+        .field-error {
+            color: #ff4d4d;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #003366;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .submit-btn:hover {
+            background: #002244;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .login-link a {
+            color: #003366;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='signup')}"></header>
+
+<main class="container">
+    <div class="signup-wrapper">
+        <h2 class="form-title">Create Account</h2>
+
+        <form th:action="@{/signup}" th:object="${userSignupDto}" method="post">
+
+            <div class="form-group">
+                <label for="loginId">ID</label>
+                <input type="text" th:field="*{loginId}" class="form-control"
+                       placeholder="4~20자 사이의 아이디" th:errorclass="field-error">
+                <div class="field-error" th:if="${#fields.hasErrors('loginId')}" th:errors="*{loginId}">아이디 에러</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" th:field="*{password}" class="form-control"
+                       placeholder="영문, 숫자, 특수문자 포함 8자 이상" th:errorclass="field-error">
+                <div class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">비밀번호 에러</div>
+            </div>
+
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" th:field="*{name}" class="form-control"
+                       placeholder="연구원 성명을 입력하세요" th:errorclass="field-error">
+                <div class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">이름 에러</div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" th:field="*{email}" class="form-control"
+                       placeholder="example@kangnam.ac.kr" th:errorclass="field-error">
+                <div class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">이메일 에러</div>
+            </div>
+
+            <button type="submit" class="submit-btn">Register Member</button>
+        </form>
+
+        <div class="login-link">
+            이미 계정이 있으신가요? <a th:href="@{/login}">Login here</a>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>
