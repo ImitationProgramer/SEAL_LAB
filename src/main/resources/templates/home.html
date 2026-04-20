@@ -31,7 +31,6 @@
             justify-content: center;
             align-items: center;
         }
-        /* 제목: 중앙 정렬 및 짙은 검은색 */
         .intro-title {
             font-size: 2rem;
             font-weight: 800;
@@ -74,6 +73,8 @@
             align-items: center;
             width: 100%;
         }
+
+        /* common.css에서 이미 정의했지만, 버튼 밀림 방지를 위해 flex-shrink 유지 */
         .delete-btn {
             color: #ff4d4d;
             border: 1px solid #ff4d4d;
@@ -85,6 +86,7 @@
             font-weight: bold;
             transition: all 0.3s;
             margin-right: 15px;
+            flex-shrink: 0;
         }
         .delete-btn:hover {
             background-color: #ff4d4d;
@@ -114,7 +116,7 @@
         <div class="intro-box">
             <div class="intro-header">
                 <h2 class="intro-title">About SEAL</h2>
-                <div sec:authorize="isAuthenticated()" class="edit-link-container">
+                <div sec:authorize="hasRole('ADMIN')" class="edit-link-container">
                     <a href="javascript:void(0)" onclick="toggleEditMode()" class="edit-link" id="editBtn">Edit Intro</a>
                 </div>
             </div>
@@ -126,7 +128,7 @@
                 </div>
             </div>
 
-            <div id="editor-container">
+            <div id="editor-container" sec:authorize="hasRole('ADMIN')">
                 <div id="introQuill"></div>
                 <div style="text-align: right; gap: 10px; display: flex; justify-content: flex-end;">
                     <button type="button" onclick="toggleEditMode()" style="background:#eee; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Cancel</button>
@@ -138,7 +140,7 @@
 
     <section class="news-container container">
         <h2 class="section-title">Main News</h2>
-        <div sec:authorize="isAuthenticated()" class="admin-action">
+        <div sec:authorize="hasRole('ADMIN')" class="admin-action">
             <a th:href="@{/admin/news/add}" class="auth-link" style="font-size: 0.9rem; padding: 6px 12px;">+ 뉴스 추가하기</a>
         </div>
 
@@ -148,7 +150,7 @@
                     <button class="news-header" onclick="toggleNews(this)" style="flex-grow: 1;">
                         <span th:text="${news.title}">뉴스 제목</span>
                     </button>
-                    <div sec:authorize="isAuthenticated()">
+                    <div sec:authorize="hasRole('ADMIN')">
                         <form th:action="@{/admin/news/delete/{id}(id=${news.id})}" method="post" onsubmit="return confirm('이 뉴스를 정말 삭제하시겠습니까?');">
                             <button type="submit" class="delete-btn">Delete</button>
                         </form>
@@ -167,7 +169,6 @@
 
 <script th:inline="javascript">
     /* <![CDATA[ */
-    // 1. 뉴스 아코디언 로직
     function toggleNews(button) {
         const currentItem = button.closest('.news-item');
         if (currentItem) {
@@ -175,7 +176,6 @@
         }
     }
 
-    // 2. 연구실 소개 인플레이스 편집 로직
     let introQuill;
 
     function toggleEditMode() {
@@ -183,7 +183,9 @@
         const editArea = document.getElementById('editor-container');
         const editBtn = document.getElementById('editBtn');
 
-        if (editArea.style.display === 'none') {
+        if (!editArea) return; // 관리자가 아닐 경우 리턴
+
+        if (editArea.style.display === 'none' || editArea.style.display === '') {
             viewArea.style.display = 'none';
             editArea.style.display = 'block';
             editBtn.innerText = 'Viewing...';
@@ -210,9 +212,9 @@
     }
 
     function saveIntro() {
+        if (!introQuill) return;
         const content = introQuill.root.innerHTML;
 
-        // 인텔리제이 에러 방지용 CSRF 토큰 처리
         const csrfToken = /*[[${_csrf?.token}]]*/ '';
         const csrfHeader = /*[[${_csrf?.headerName}]]*/ 'X-CSRF-TOKEN';
 
@@ -230,7 +232,7 @@
                     toggleEditMode();
                     alert('연구실 소개가 성공적으로 수정되었습니다.');
                 } else {
-                    alert('저장 중 오류가 발생했습니다.');
+                    alert('저장 중 오류가 발생했습니다. 권한을 확인하세요.');
                 }
             });
     }

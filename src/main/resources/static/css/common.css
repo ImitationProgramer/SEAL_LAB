@@ -16,7 +16,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 25px; /* 로고 좌측 밀착도를 위해 패딩 조정 */
+    padding: 0 25px;
     height: 80px;
     background-color: #fff;
     border-bottom: 1px solid #eee;
@@ -48,7 +48,6 @@ nav ul li a {
     padding: 8px 0;
 }
 
-/* 활성화 메뉴 밑줄 효과 */
 nav ul li a:hover, nav ul li a.active { color: #003366; }
 
 nav ul li a::after {
@@ -112,19 +111,18 @@ nav ul li a:hover::after, nav ul li a.active::after { width: 100%; }
     border-radius: 4px; cursor: pointer; font-size: 12px; color: #666;
 }
 
-/* --- 5. Home: Hero 섹션 (라이브 배경 및 중앙 정렬) --- */
+/* --- 5. Home: Hero 섹션 --- */
 .hero {
-    height: 500px; /* 고정 높이 */
-    background-color: #0d0e12; /* 딥 블랙 배경 */
+    height: 500px;
+    background-color: #0d0e12;
     position: relative;
     overflow: hidden;
     color: #fff;
     display: flex;
-    justify-content: center; /* 가로 중앙 */
-    align-items: center;     /* 세로 중앙 */
+    justify-content: center;
+    align-items: center;
 }
 
-/* 캔버스가 배경 전체를 채우도록 설정 */
 #heroCanvas {
     position: absolute;
     top: 0; left: 0;
@@ -132,26 +130,25 @@ nav ul li a:hover::after, nav ul li a.active::after { width: 100%; }
     z-index: 1;
 }
 
-/* 텍스트 컨텐츠는 캔버스와 도트보다 위에 배치 */
 .hero-content {
     position: relative;
     z-index: 10;
     text-align: center;
-    pointer-events: none; /* 마우스 이벤트가 캔버스로 전달되게 함 */
+    pointer-events: none;
 }
 
 .hero-text {
     font-family: 'Times New Roman', Times, serif;
     font-style: italic;
-    font-size: 3.5rem; /* 크기 확장 */
+    font-size: 3.5rem;
     font-weight: 400;
     letter-spacing: 1px;
     margin: 0 0 15px 0;
-    text-shadow: 0 0 15px rgba(0,0,0,0.8); /* 가독성을 위한 그림자 */
+    text-shadow: 0 0 15px rgba(0,0,0,0.8);
 }
 
 .hero-text span {
-    color: #7ba6c0; /* S, E, A, L 강조색 */
+    color: #7ba6c0;
     font-weight: bold;
 }
 
@@ -163,7 +160,7 @@ nav ul li a:hover::after, nav ul li a.active::after { width: 100%; }
     margin: 0 auto;
 }
 
-/* --- 6. Home: Main News 아코디언 --- */
+/* --- 6. Home: Main News 아코디언 (수정됨) --- */
 .news-container {
     max-width: 1100px;
     margin: 60px auto;
@@ -181,8 +178,17 @@ nav ul li a:hover::after, nav ul li a.active::after { width: 100%; }
     border-bottom: 1px solid #eee;
 }
 
-.news-header {
+/* 뉴스 헤더 컨테이너: 제목과 버튼을 가로로 배치 */
+.news-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
+}
+
+/* 뉴스 제목 버튼: 가변 너비로 변경 */
+.news-header {
+    flex: 1; /* 제목이 남은 공간을 다 차지함 */
     padding: 25px 15px;
     background: none;
     border: none;
@@ -194,20 +200,48 @@ nav ul li a:hover::after, nav ul li a.active::after { width: 100%; }
     font-weight: 700;
     text-align: left;
     transition: background 0.2s;
+    min-width: 0; /* 텍스트 생략 기능을 위해 필요 */
+}
+
+.news-header span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .news-header:hover { background-color: #fafafa; }
 
 .news-header::after {
-    content: '＋'; /* 세련된 플러스 기호 */
+    content: '＋';
     font-size: 1.2rem;
     color: #aaa;
     transition: transform 0.3s;
+    margin-left: 10px;
+    flex-shrink: 0;
 }
 
 .news-item.active .news-header::after {
-    content: '－'; /* 마이너스 기호 */
+    content: '－';
     transform: rotate(180deg);
+}
+
+/* 뉴스 전용 삭제 버튼 스타일 (절대 좌표 해제) */
+.news-item .delete-btn {
+    position: static; /* 카드 레이아웃의 absolute 해제 */
+    margin-right: 15px;
+    padding: 5px 12px;
+    border: 1px solid #ff4d4d;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    transition: all 0.3s;
+    background: transparent;
+    flex-shrink: 0; /* 버튼이 찌그러지지 않게 방어 */
+}
+
+.news-item .delete-btn:hover {
+    background-color: #ff4d4d;
+    color: #fff;
 }
 
 .news-content {
@@ -219,19 +253,13 @@ nav ul li a:hover::after, nav ul li a.active::after { width: 100%; }
 }
 
 .news-item.active .news-content {
-    max-height: 1000px; /* 내용 길이에 맞춰 자동 조절 */
+    max-height: 1000px;
     padding: 25px 20px;
 }
 
-.news-content p {
-    margin: 0;
-    color: #555;
+.news-content-inner {
     line-height: 1.8;
-}
-/* 삭제 버튼 호버 효과 */
-.news-header-wrapper button[type="submit"]:hover {
-    background-color: #ff4d4d !important;
-    color: white !important;
+    color: #444;
 }
 
 /* --- 7. 레이아웃 공통 --- */
@@ -246,7 +274,7 @@ nav ul li a:hover::after, nav ul li a.active::after { width: 100%; }
     margin-bottom: 15px;
 }
 
-/* 공통 카드 레이아웃 */
+/* 공통 카드 레이아웃 (Member, Publication 등) */
 .member-card {
     display: flex;
     gap: 40px;
@@ -255,10 +283,21 @@ nav ul li a:hover::after, nav ul li a.active::after { width: 100%; }
     border: 1px solid #eee;
     border-radius: 12px;
     margin-bottom: 30px;
-    position: relative;
+    position: relative; /* 삭제 버튼의 기준점 */
 }
 
-/* 인물 사진 공통 규격 */
+/* 카드용 삭제 버튼 (기존 우측 상단 고정 스타일 유지) */
+.member-card .delete-btn {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    color: #ff4d4d;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
 .member-photo {
     flex: 0 0 280px;
     height: 180px;
@@ -273,15 +312,5 @@ nav ul li a:hover::after, nav ul li a.active::after { width: 100%; }
     object-fit: cover;
 }
 
-/* 텍스트 정보 스타일 */
 .member-info { flex: 1; }
 .email-link { color: #003366; text-decoration: underline; }
-.delete-btn {
-    position: absolute;
-    right: 20px;
-    top: 20px;
-    color: #ff4d4d;
-    background: none;
-    border: none;
-    cursor: pointer;
-}

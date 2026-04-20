@@ -13,7 +13,7 @@
         .prof-photo img { width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .prof-basic-info { flex: 1; position: relative; }
 
-        /* 공통 섹션 스타일 (전체 너비 사용) */
+        /* 공통 섹션 스타일 */
         .prof-section { margin-bottom: 50px; position: relative; width: 100%; }
         .prof-section h3 {
             font-size: 1.6rem; color: #003366; border-bottom: 2px solid #003366;
@@ -52,13 +52,12 @@
 
         <div class="prof-basic-info">
             <div class="prof-section">
-                <span sec:authorize="isAuthenticated()" class="edit-btn" onclick="startEdit('basic')">[Edit Info]</span>
+                <span sec:authorize="hasRole('ADMIN')" class="edit-btn" onclick="startEdit('basic')">[Edit Info]</span>
                 <div id="basic-view" class="content-view" th:utext="${prof.basicInfo}">
                     <h2>Prof. Jungsoo Park</h2>
                     <p>Assistant Professor, School of Software Application, Kangnam University</p>
-                    <p>jspark@kangnam.ac.kr</p>
                 </div>
-                <div id="basic-edit" class="editor-box">
+                <div id="basic-edit" class="editor-box" sec:authorize="hasRole('ADMIN')">
                     <div id="basic-quill" style="height: 150px;"></div>
                     <div style="text-align: right;">
                         <button class="cancel-btn" onclick="cancelEdit('basic')">Cancel</button>
@@ -71,14 +70,11 @@
 
     <div class="prof-section">
         <h3>Research Interests</h3>
-        <span sec:authorize="isAuthenticated()" class="edit-btn" onclick="startEdit('research')">[Edit]</span>
+        <span sec:authorize="hasRole('ADMIN')" class="edit-btn" onclick="startEdit('research')">[Edit]</span>
         <div id="research-view" class="content-view" th:utext="${prof.researchInterests}">
-            <ul>
-                <li>Android Malware Analysis</li>
-                <li>Zero Trust & Cross Domain Solution</li>
-            </ul>
+            <ul><li>Android Malware Analysis</li></ul>
         </div>
-        <div id="research-edit" class="editor-box">
+        <div id="research-edit" class="editor-box" sec:authorize="hasRole('ADMIN')">
             <div id="research-quill" style="height: 250px;"></div>
             <div style="text-align: right;">
                 <button class="cancel-btn" onclick="cancelEdit('research')">Cancel</button>
@@ -89,11 +85,11 @@
 
     <div class="prof-section">
         <h3>Education</h3>
-        <span sec:authorize="isAuthenticated()" class="edit-btn" onclick="startEdit('edu')">[Edit]</span>
+        <span sec:authorize="hasRole('ADMIN')" class="edit-btn" onclick="startEdit('edu')">[Edit]</span>
         <div id="edu-view" class="content-view" th:utext="${prof.education}">
             <p><strong>Ph.D. in Software Convergence</strong>, Soongsil University</p>
         </div>
-        <div id="edu-edit" class="editor-box">
+        <div id="edu-edit" class="editor-box" sec:authorize="hasRole('ADMIN')">
             <div id="edu-quill" style="height: 300px;"></div>
             <div style="text-align: right;">
                 <button class="cancel-btn" onclick="cancelEdit('edu')">Cancel</button>
@@ -104,11 +100,11 @@
 
     <div class="prof-section">
         <h3>Honors and Awards</h3>
-        <span sec:authorize="isAuthenticated()" class="edit-btn" onclick="startEdit('awards')">[Edit]</span>
+        <span sec:authorize="hasRole('ADMIN')" class="edit-btn" onclick="startEdit('awards')">[Edit]</span>
         <div id="awards-view" class="content-view" th:utext="${prof.awards}">
             <ul><li>2025 국가정보원장 표창 수상</li></ul>
         </div>
-        <div id="awards-edit" class="editor-box">
+        <div id="awards-edit" class="editor-box" sec:authorize="hasRole('ADMIN')">
             <div id="awards-quill" style="height: 300px;"></div>
             <div style="text-align: right;">
                 <button class="cancel-btn" onclick="cancelEdit('awards')">Cancel</button>
@@ -124,21 +120,23 @@
     /* <![CDATA[ */
     let quills = {};
 
-    const toolbarOptions = [
-        [ { 'header': [1, 2, 3, false] } ],
-        [ 'bold', 'italic', 'underline', 'strike' ],
-        [ { 'list': 'ordered'}, { 'list': 'bullet' } ],
-        [ { 'color': [] }, { 'background': [] } ],
-        [ 'clean' ]
-    ];
-
     function startEdit(type) {
+        const editArea = document.getElementById(type + '-edit');
+        if (!editArea) return; // 관리자 권한이 없으면 실행 안 됨
+
         document.getElementById(type + '-view').style.display = 'none';
-        document.getElementById(type + '-edit').style.display = 'block';
+        editArea.style.display = 'block';
 
         if (!quills[type]) {
             quills[type] = new Quill('#' + type + '-quill', {
-                modules: { toolbar: toolbarOptions },
+                modules: {
+                    toolbar: [
+                        [ { 'header': [1, 2, 3, false] } ],
+                        [ 'bold', 'italic', 'underline' ],
+                        [ { 'list': 'ordered'}, { 'list': 'bullet' } ],
+                        [ 'clean' ]
+                    ]
+                },
                 theme: 'snow'
             });
         }
@@ -166,9 +164,9 @@
             if(res.ok) {
                 document.getElementById(type + '-view').innerHTML = content;
                 cancelEdit(type);
-                alert('정상적으로 저장되었습니다.');
+                alert('수정되었습니다.');
             } else {
-                alert('저장에 실패했습니다.');
+                alert('저장 실패. 권한을 확인하세요.');
             }
         });
     }

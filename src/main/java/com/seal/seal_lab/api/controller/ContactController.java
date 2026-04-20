@@ -1,26 +1,34 @@
 package com.seal.seal_lab.api.controller;
 
+import com.seal.seal_lab.core.annotation.ZeroTrust; // 어노테이션 임포트
 import com.seal.seal_lab.core.entity.ContactInfo;
 import com.seal.seal_lab.infra.repository.ContactInfoRepository;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j; // 보안 로그 기록을 위해 추가
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class ContactController {
+
     private final ContactInfoRepository contactRepository;
 
+    /**
+     * 연락처 및 위치 정보 조회 (전체 공개)
+     * 방문객이 위치를 찾아와야 하므로 문턱을 0점으로 설정합니다.
+     */
     @GetMapping("/contact")
+    @ZeroTrust(requiredScore = 0)
     public String viewContact(Model model) {
-        // 1. 우선 첫 번째 데이터를 찾습니다. (ID에 의존하기보다 전체 중 첫 번째를 가져오는 게 안전합니다)
+        // 첫 번째 데이터 조회 (데이터가 없으면 기본값으로 생성)
         ContactInfo contact = contactRepository.findAll().stream().findFirst().orElse(null);
 
-        // 2. 만약 데이터가 하나도 없다면 새로 만듭니다.
         if (contact == null) {
+            log.info("[ZTA-INFO] 초기 연락처 정보가 없어 기본 데이터를 생성합니다.");
             contact = contactRepository.save(ContactInfo.builder()
-                    // .id(1L) <- 이 부분을 지워야 합니다! DB가 자동으로 번호를 매기게 하세요.
                     .addressKr("경기도 용인시 기흥구 강남로 40 강남대학교 이공관")
                     .addressEn("Robot Convergence Building, 40 Gangnam-ro, Giheung-gu, Yongin-si, Gyeonggi-do, 16979, Republic of Korea")
                     .phone("031-280-3694")
@@ -35,15 +43,28 @@ public class ContactController {
         return "contact/view";
     }
 
+    /**
+     * 연락처 정보 업데이트 (관리자 전용)
+     * 연구실의 공식 정보를 변경하는 민감한 작업이므로 90점 이상의 보안 점수를 요구합니다.
+     */
     @PostMapping("/admin/contact/update")
+    @ZeroTrust(requiredScore = 90)
     public String updateContact(@ModelAttribute ContactInfo contact) {
-        // 업데이트 시에는 기존의 ID를 유지해야 합니다.
-        // 만약 첫 번째 데이터의 ID가 1이 아닐 수도 있으니, 실제 있는 ID를 세팅해주는 게 좋습니다.
+
+        // [LOG] 수정 시도 기록
+        log.info("[ZTA-AUDIT] 연구실 연락처 정보 수정 요청됨. (Score Verification Required)");
+
+        // 기존 ID 유지 로직
         ContactInfo existing = contactRepository.findAll().stream().findFirst().orElse(null);
         if (existing != null) {
             contact.setId(existing.getId());
         }
+
         contactRepository.save(contact);
+
+        // [LOG] 최종 성공 기록
+        log.info("[ZTA-SUCCESS] 연구실 연락처 정보 업데이트 완료. (User: Verified Admin)");
+
         return "redirect:/contact";
     }
 }

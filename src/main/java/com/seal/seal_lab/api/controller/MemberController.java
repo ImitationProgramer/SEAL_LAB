@@ -1,5 +1,6 @@
 package com.seal.seal_lab.api.controller;
 
+import com.seal.seal_lab.core.annotation.ZeroTrust;
 import com.seal.seal_lab.core.entity.Member;
 import com.seal.seal_lab.infra.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +21,14 @@ public class MemberController {
 
     // 멤버 목록 조회
     @GetMapping("/about/member")
+    @ZeroTrust(requiredScore = 0)
     public String memberList(Model model) {
         model.addAttribute("members", memberRepository.findAll());
         return "about/member";
     }
 
     @PostMapping("/admin/member/add")
+    @ZeroTrust(requiredScore = 90)
     public String addMember(@ModelAttribute Member member,
                             @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
 

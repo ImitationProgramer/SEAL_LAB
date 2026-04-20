@@ -46,10 +46,14 @@
         }
         .btn-divider { color: #ddd; }
 
-        /* 관리자용 추가 폼 */
-        .add-pub-box { background: #f8f9fa; padding: 25px; border-radius: 8px; margin-bottom: 40px; border: 1px solid #ddd; }
+        /* [수정] 관리자용 추가 폼 박스 스타일 강화 */
+        .add-pub-box {
+            background: #f8f9fa; padding: 30px; border-radius: 12px;
+            margin-bottom: 50px; border: 1px solid #003366;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
 
-        html { scroll-behavior: smooth; } /* 부드러운 스크롤 효과 */
+        html { scroll-behavior: smooth; }
     </style>
 </head>
 <body>
@@ -63,25 +67,26 @@
            class="nav-btn" th:text="${cat.displayName}">Category</a>
     </nav>
 
-    <div sec:authorize="isAuthenticated()" class="add-pub-box">
-        <h3 style="margin-bottom:15px; color: #003366;">+ Add New Publication / Patent</h3>
-        <form th:action="@{/admin/publications/add}" method="post" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <select name="category" required style="grid-column: span 2; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+    <div sec:authorize="hasRole('ADMIN')" class="add-pub-box">
+        <h3 style="margin-bottom:20px; color: #003366; font-weight: 800;">+ Register New Publication / Patent</h3>
+        <form th:action="@{/admin/publications/add}" method="post" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <select name="category" required style="grid-column: span 2; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+                <option value="" disabled selected>Select Category</option>
                 <option th:each="cat : ${categories}" th:value="${cat.name()}" th:text="${cat.displayName}"></option>
             </select>
-            <input type="text" name="title" placeholder="Paper/Patent Title" required style="grid-column: span 2; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <input type="text" name="authors" placeholder="Authors (e.g. Gildong Hong, Jungsoo Park*)" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <input type="text" name="venue" placeholder="Journal / Conference / Patent Office" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <input type="date" name="publishDate" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <input type="text" name="link" placeholder="Link (URL, optional)" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <button type="submit" class="save-btn" style="grid-column: span 2; padding: 12px; margin-top: 5px; cursor: pointer;">Save Publication</button>
+            <input type="text" name="title" placeholder="Paper/Patent Title" required style="grid-column: span 2; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+            <input type="text" name="authors" placeholder="Authors (e.g. Gildong Hong, Jungsoo Park*)" required style="padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+            <input type="text" name="venue" placeholder="Journal / Conference / Patent Office" required style="padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+            <input type="date" name="publishDate" required style="padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+            <input type="text" name="link" placeholder="Link (URL, optional)" style="padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+            <button type="submit" class="save-btn" style="grid-column: span 2; padding: 14px; margin-top: 10px; cursor: pointer; font-weight: bold;">Save Achievement</button>
         </form>
     </div>
 
     <div th:each="cat : ${categories}" class="pub-category-section" th:id="'section-' + ${cat.name()}">
         <h2 class="pub-category-title" th:text="${cat.displayName}">Category Name</h2>
 
-        <div th:if="${groupedPubs.get(cat.name()).isEmpty()}" style="color: #bbb; padding: 15px; font-style: italic;">
+        <div th:if="${groupedPubs.get(cat.name()).isEmpty()}" style="color: #bbb; padding: 20px; font-style: italic;">
             No records found in this category.
         </div>
 
@@ -96,11 +101,11 @@
                 <span class="pub-date" th:text="${#temporals.format(pub.publishDate, 'yyyy.MM')}">2026.03</span>
             </div>
 
-            <div sec:authorize="isAuthenticated()" class="pub-admin-btns">
+            <div sec:authorize="hasRole('ADMIN')" class="pub-admin-btns">
                 <a th:href="@{'/admin/publications/edit/' + ${pub.id}}" class="edit-link">Edit</a>
                 <span class="btn-divider">|</span>
                 <form th:action="@{'/admin/publications/delete/' + ${pub.id}}" method="post" style="display:inline;">
-                    <button type="submit" class="delete-btn-text" onclick="return confirm('정말 삭제하시겠습니까?')">Delete</button>
+                    <button type="submit" class="delete-btn-text" onclick="return confirm('이 실적을 정말 삭제하시겠습니까?')">Delete</button>
                 </form>
             </div>
         </div>

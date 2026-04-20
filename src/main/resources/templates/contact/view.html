@@ -39,11 +39,11 @@
 <main class="container">
     <h1 class="section-title" style="text-align: left;">Contact</h1>
 
-    <div sec:authorize="isAuthenticated()" style="text-align: right; margin-bottom: 20px;">
+    <div sec:authorize="hasRole('ADMIN')" style="text-align: right; margin-bottom: 20px;">
         <button onclick="toggleEditForm()" class="auth-link">Modify Info</button>
     </div>
 
-    <div id="contactEditForm" class="edit-form-box">
+    <div id="contactEditForm" class="edit-form-box" sec:authorize="hasRole('ADMIN')">
         <h3 style="margin-bottom:20px; color: #003366;">Edit Contact Details</h3>
         <form th:action="@{/admin/contact/update}" method="post">
             <input type="hidden" name="id" th:value="${contact.id}">
@@ -82,7 +82,6 @@
 
 <script>
     function initMap() {
-        // SDK가 로드될 때까지 대기
         if (typeof kakao === 'undefined') {
             console.error("Kakao SDK 로드 실패");
             return;
@@ -102,8 +101,6 @@
             };
 
             const map = new kakao.maps.Map(container, options);
-
-            // 마커 표시
             const marker = new kakao.maps.Marker({
                 position: new kakao.maps.LatLng(lat, lng)
             });
@@ -111,13 +108,13 @@
         });
     }
 
-    // 윈도우 로드 시 실행
     window.onload = initMap;
 
-    // 폼 토글 기능 추가
     function toggleEditForm() {
         const form = document.getElementById('contactEditForm');
-        form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
+        if (form) {
+            form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
+        }
     }
 </script>
 </body>

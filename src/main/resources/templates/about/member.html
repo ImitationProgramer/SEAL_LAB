@@ -71,7 +71,7 @@
 <main class="container">
     <h1 class="section-title" style="text-align: left;">Member</h1>
 
-    <div sec:authorize="isAuthenticated()" class="admin-controls" style="margin-bottom: 30px;">
+    <div sec:authorize="hasRole('ADMIN')" class="admin-controls" style="margin-bottom: 30px;">
         <button onclick="toggleAddForm()" class="auth-link" style="cursor:pointer;">+ Add New Member</button>
 
         <div id="addForm">
@@ -104,7 +104,7 @@
 
         <div th:each="member : ${members}" class="member-card">
 
-            <div sec:authorize="isAuthenticated()" class="member-admin-actions">
+            <div sec:authorize="hasRole('ADMIN')" class="member-admin-actions">
                 <a th:href="@{'/admin/member/edit/' + ${member.id}}" class="edit-link-text">Edit</a>
                 <span class="action-divider">|</span>
                 <form th:action="@{'/admin/member/delete/' + ${member.id}}" method="post" style="display:inline;">
@@ -138,7 +138,9 @@
 <script>
     function toggleAddForm() {
         const form = document.getElementById('addForm');
-        form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
+        if(form) {
+            form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
+        }
     }
 </script>
 </body>
