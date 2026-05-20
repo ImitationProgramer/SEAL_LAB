@@ -32,3 +32,7 @@ discord.webhook.connect-timeout-ms=2000
 discord.webhook.read-timeout-ms=2000
 discord.webhook.max-content-length=1500
 discord.webhook.url=${DISCORD_WEBHOOK_URL}
+app.storage.s3.bucket=${S3_BUCKET_NAME}
+app.storage.s3.region=${AWS_REGION}
+app.storage.s3.profile-prefix=profiles
+app.storage.s3.gallery-prefix=gallery
