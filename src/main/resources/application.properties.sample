@@ -2,8 +2,8 @@ spring.application.name=SEAL_LAB
 # MySQL ?? ??
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.datasource.url=jdbc:mysql://localhost:3306/seal_lab_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-spring.datasource.username=root
-spring.datasource.password=YOUR_DATABASE_PASSWORD_HERE
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
 spring.servlet.multipart.max-file-size=10MB
 spring.servlet.multipart.max-request-size=10MB
 spring.jpa.hibernate.ddl-auto=update
@@ -11,8 +11,22 @@ spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 
 spring.jpa.properties.hibernate.format_sql=true
-
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+spring.jpa.open-in-view=false
+server.forward-headers-strategy=framework
+geo.ip-api.url=http://ip-api.com/json/
+mfa.issuer=SEAL_LAB
+mfa.secret-encryption-key=${MFA_SECRET_ENCRYPTION_KEY}
+seal.security.zero-trust.absolute-min-score=10
+seal.security.mfa.step-up.ttl-minutes=10
+seal.security.mfa.step-up.validate-request-ip=true
+seal.security.mfa.step-up.validate-fingerprint=true
+seal.security.password-reset.token-ttl-minutes=15
+seal.migration.legacy-member.enabled=true
 # 카카오맵 API 키
-kakao.map.api.key=YOUR_KAKAO_MAP_API_KEY_HERE
-admin.initial.password=YOUR_ADMIN_PASSWORD_HERE
+kakao.map.api.key=${KAKAO_MAP_API_KEY}
+admin.initial.password=${ADMIN_INITIAL_PASSWORD}
+discord.webhook.enabled=true
+discord.webhook.connect-timeout-ms=2000
+discord.webhook.read-timeout-ms=2000
+discord.webhook.max-content-length=1500
+discord.webhook.url=${DISCORD_WEBHOOK_URL}

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Management - SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .users-page { max-width: 1240px; margin: 40px auto 80px; padding: 0 20px; }
+        .users-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            border: 1px solid #eef2f6;
+        }
+        .users-card h2 { margin: 0 0 12px; color: #003366; }
+        .users-card p { margin: 0 0 20px; color: #607085; line-height: 1.6; }
+        .users-actions { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+        .back-link {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            background: #003366;
+            color: #fff;
+            font-weight: 700;
+        }
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+            padding: 16px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #e7edf4;
+        }
+        .filter-form input,
+        .filter-form select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #cfd8e3;
+            border-radius: 10px;
+            background: #fff;
+        }
+        .filter-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .filter-button {
+            padding: 11px 14px;
+            border: none;
+            border-radius: 10px;
+            background: #003366;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .filter-reset {
+            display: inline-block;
+            padding: 11px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            background: #e8eef5;
+            color: #314155;
+            font-weight: 700;
+        }
+        .banner, .error-banner {
+            margin-bottom: 18px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid;
+        }
+        .banner {
+            background: #effaf2;
+            color: #17633f;
+            border-color: #cfead7;
+        }
+        .error-banner {
+            background: #fff5f5;
+            color: #b3261e;
+            border-color: #ffd6d6;
+        }
+        .table-wrap { overflow-x: auto; }
+        .users-table { width: 100%; border-collapse: collapse; min-width: 1080px; }
+        .users-table th, .users-table td { padding: 14px 12px; border-bottom: 1px solid #e7edf4; text-align: left; vertical-align: top; }
+        .users-table th { color: #607085; font-size: 0.85rem; letter-spacing: 0.03em; text-transform: uppercase; }
+        .users-table td { color: #1f2937; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92rem; }
+        .pill {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            background: #edf4ff;
+            color: #003366;
+        }
+        .pill.public { background: #fff5f5; color: #b3261e; }
+        .pill.visible { background: #effaf2; color: #17633f; }
+        .rank-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .rank-form select {
+            padding: 9px 10px;
+            border: 1px solid #cfd8e3;
+            border-radius: 9px;
+            background: #fff;
+        }
+        .rank-form button {
+            padding: 9px 12px;
+            border: none;
+            border-radius: 9px;
+            background: #0f4c81;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .empty-state {
+            padding: 36px 20px;
+            border-radius: 16px;
+            background: #f8fafc;
+            border: 1px dashed #d4dde8;
+            text-align: center;
+            color: #607085;
+        }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='trust')}"></header>
+
+<main class="users-page">
+    <section class="users-card">
+        <div class="users-actions">
+            <div>
+                <h2>User Management</h2>
+                <p>가입된 전체 계정을 조회하고, 연구실 직급을 `일반인/인턴/학부연구생/석사생/교수`로 변경합니다. 직급이 `일반인`이 아니면 이후 공개 인원 페이지 노출 대상이 됩니다.</p>
+            </div>
+            <a class="back-link" th:href="@{/trust/debug}">Trust Debug로 돌아가기</a>
+        </div>
+
+        <form class="filter-form" method="get" th:action="@{/admin/users}">
+            <input type="text" name="keyword" placeholder="loginId 또는 이름 검색" th:value="${keywordFilter}">
+            <select name="role">
+                <option value="" th:selected="${roleFilter == null or roleFilter == ''}">All Roles</option>
+                <option th:each="role : ${roles}"
+                        th:value="${role.name()}"
+                        th:selected="${roleFilter == role.name()}"
+                        th:text="${role.name()}">ADMIN</option>
+            </select>
+            <select name="labRank">
+                <option value="" th:selected="${labRankFilter == null or labRankFilter == ''}">All Lab Ranks</option>
+                <option th:each="labRank : ${labRanks}"
+                        th:value="${labRank.name()}"
+                        th:selected="${labRankFilter == labRank.name()}"
+                        th:text="${labRank.displayName}">일반인</option>
+            </select>
+            <div class="filter-actions">
+                <button type="submit" class="filter-button">필터 적용</button>
+                <a class="filter-reset" th:href="@{/admin/users}">초기화</a>
+            </div>
+        </form>
+
+        <div th:if="${userOperationMessage != null}" class="banner" th:text="${userOperationMessage}">
+            계정의 직급을 변경했습니다.
+        </div>
+        <div th:if="${userFilterError != null}" class="error-banner" th:text="${userFilterError}">
+            지원하지 않는 필터입니다.
+        </div>
+        <div th:if="${userOperationError != null}" class="error-banner" th:text="${userOperationError}">
+            직급 변경에 실패했습니다.
+        </div>
+
+        <div th:if="${#lists.isEmpty(users)}" class="empty-state">
+            검색 조건에 맞는 사용자 계정이 없습니다.
+        </div>
+
+        <div th:if="${!#lists.isEmpty(users)}" class="table-wrap">
+            <table class="users-table">
+                <thead>
+                <tr>
+                    <th>Login ID</th>
+                    <th>이름</th>
+                    <th>이메일</th>
+                    <th>Role</th>
+                    <th>연구실 직급</th>
+                    <th>공개 인원 노출</th>
+                    <th>MFA</th>
+                    <th>프로필</th>
+                    <th>직급 변경</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}">
+                    <td class="mono" th:text="${user.loginId}">jspark</td>
+                    <td th:text="${user.name}">박준수</td>
+                    <td th:text="${user.email != null ? user.email : '-'}">jspark@example.com</td>
+                    <td>
+                        <span class="pill" th:text="${user.role.name()}">ADMIN</span>
+                    </td>
+                    <td>
+                        <span class="pill"
+                              th:classappend="${user.resolvedLabRank.name() == 'GENERAL_PUBLIC'} ? ' public' : ''"
+                              th:text="${user.labRankDisplayName}">교수</span>
+                    </td>
+                    <td>
+                        <span class="pill"
+                              th:classappend="${user.visibleOnMemberPage} ? ' visible' : ' public'"
+                              th:text="${user.visibleOnMemberPage} ? '노출 대상' : '미노출'">노출 대상</span>
+                    </td>
+                    <td th:text="${user.mfaEnabled} ? 'Enabled' : 'Disabled'">Enabled</td>
+                    <td>
+                        <a th:href="@{'/admin/users/' + ${user.loginId} + '/edit'}"
+                           style="color:#0f4c81; text-decoration:underline; font-weight:700;">프로필 편집</a>
+                    </td>
+                    <td>
+                        <form class="rank-form" method="post" th:action="@{'/admin/users/' + ${user.loginId} + '/lab-rank'}">
+                            <input type="hidden" name="keyword" th:value="${keywordFilter}">
+                            <input type="hidden" name="role" th:value="${roleFilter}">
+                            <input type="hidden" name="currentLabRank" th:value="${labRankFilter}">
+                            <select name="labRank">
+                                <option th:each="labRank : ${labRanks}"
+                                        th:value="${labRank.name()}"
+                                        th:selected="${user.resolvedLabRank.name() == labRank.name()}"
+                                        th:text="${labRank.displayName}">일반인</option>
+                            </select>
+                            <button type="submit">변경</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

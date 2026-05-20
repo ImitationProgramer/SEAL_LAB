@@ -72,29 +72,7 @@
     <h1 class="section-title" style="text-align: left;">Member</h1>
 
     <div sec:authorize="hasRole('ADMIN')" class="admin-controls" style="margin-bottom: 30px;">
-        <button onclick="toggleAddForm()" class="auth-link" style="cursor:pointer;">+ Add New Member</button>
-
-        <div id="addForm">
-            <h3 style="margin-bottom: 20px; color: #003366;">Register New Member</h3>
-            <form th:action="@{/admin/member/add}" method="post" enctype="multipart/form-data">
-                <div class="add-form-grid">
-                    <input type="text" name="name" placeholder="이름 (Ex: 이여민)" required>
-                    <input type="text" name="degree" placeholder="학위 (Ex: 석사생)">
-                    <input type="text" name="role" placeholder="역할 (Ex: Graduate Student)">
-                    <input type="text" name="department" placeholder="학과 (Ex: Computer Science)">
-                    <input type="email" name="email" placeholder="이메일 주소" class="full-width">
-                    <input type="text" name="keywords" placeholder="관심 분야 (쉼표 구분)" class="full-width">
-                    <div class="full-width">
-                        <label style="display:block; margin-bottom: 5px; font-size: 0.9rem;">프로필 사진:</label>
-                        <input type="file" name="file">
-                    </div>
-                </div>
-                <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" onclick="toggleAddForm()" class="cancel-btn" style="padding: 10px 20px; cursor:pointer;">Cancel</button>
-                    <button type="submit" class="save-btn" style="padding: 10px 30px; cursor:pointer;">Save Member</button>
-                </div>
-            </form>
-        </div>
+        <a th:href="@{/admin/users}" class="auth-link" style="cursor:pointer; text-decoration:none;">User 관리로 이동</a>
     </div>
 
     <div class="member-list">
@@ -103,13 +81,11 @@
         </p>
 
         <div th:each="member : ${members}" class="member-card">
-
-            <div sec:authorize="hasRole('ADMIN')" class="member-admin-actions">
-                <a th:href="@{'/admin/member/edit/' + ${member.id}}" class="edit-link-text">Edit</a>
-                <span class="action-divider">|</span>
-                <form th:action="@{'/admin/member/delete/' + ${member.id}}" method="post" style="display:inline;">
-                    <button type="submit" class="delete-btn-text" onclick="return confirm('정말 삭제하시겠습니까?')">Delete</button>
-                </form>
+            <div class="member-admin-actions">
+                <a sec:authorize="hasRole('ADMIN')" th:href="@{'/admin/users/' + ${member.loginId} + '/edit'}"
+                   class="edit-link-text">Edit Profile</a>
+                <a sec:authorize="isAuthenticated()" th:if="${#authentication.name == member.loginId}"
+                   th:href="@{/profile/me/edit}" class="edit-link-text">Edit Profile</a>
             </div>
 
             <div class="member-photo">
@@ -119,10 +95,10 @@
             <div class="member-info">
                 <h2>
                     <span th:text="${member.name}" style="color: #000; font-weight: 800;">이름</span>
-                    <small th:text="'(' + ${member.degree} + ')'" style="font-size: 1rem; color: #666; font-weight: normal;"></small>
+                    <small th:text="'(' + ${member.labRankDisplayName} + ')'" style="font-size: 1rem; color: #666; font-weight: normal;"></small>
                 </h2>
-                <p th:text="${member.role}" style="font-weight: 600; color: #444;">Role</p>
-                <p th:text="${member.department}">Department</p>
+                <p th:text="${member.labRankDisplayName}" style="font-weight: 600; color: #444;">연구실 직급</p>
+                <p th:text="${member.department != null and !member.department.isBlank() ? member.department : 'Department 정보 없음'}">Department</p>
                 <p>Kangnam University</p>
                 <p><a th:href="'mailto:' + ${member.email}" th:text="${member.email}" class="email-link">Email</a></p>
 
@@ -130,18 +106,14 @@
                     <strong>Keywords:</strong><br>
                     <span th:text="${member.keywords}">Keywords here...</span>
                 </div>
+
+                <div class="keywords" th:if="${member.bio != null and !member.bio.isEmpty()}" style="margin-top: 14px;">
+                    <strong>Bio:</strong><br>
+                    <span th:text="${member.bio}">소개 문구</span>
+                </div>
             </div>
         </div>
     </div>
 </main>
-
-<script>
-    function toggleAddForm() {
-        const form = document.getElementById('addForm');
-        if(form) {
-            form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
-        }
-    }
-</script>
 </body>
 </html>

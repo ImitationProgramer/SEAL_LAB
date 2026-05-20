@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <springProperty scope="context" name="discordWebhookUrl" source="discord.webhook.url" defaultValue="" />
+    <springProperty scope="context" name="discordWebhookEnabled" source="discord.webhook.enabled" defaultValue="true" />
+    <springProperty scope="context" name="discordConnectTimeoutMs" source="discord.webhook.connect-timeout-ms" defaultValue="2000" />
+    <springProperty scope="context" name="discordReadTimeoutMs" source="discord.webhook.read-timeout-ms" defaultValue="2000" />
+    <springProperty scope="context" name="discordMaxContentLength" source="discord.webhook.max-content-length" defaultValue="1500" />
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
@@ -8,10 +13,21 @@
     </appender>
 
     <appender name="DISCORD" class="com.seal.seal_lab.infra.logging.DiscordAppender">
-        <webhookUrl>https://discord.com/api/webhooks/1488823690794893312/I_UBmYJLeuSyrnk8gifooOLP23jGAI-aG5FAJP409TnsFz5bSs9tAq-Wh_C6btTbDAc-</webhookUrl>
+        <webhookUrl>${discordWebhookUrl}</webhookUrl>
+        <enabled>${discordWebhookEnabled}</enabled>
+        <connectTimeoutMs>${discordConnectTimeoutMs}</connectTimeoutMs>
+        <readTimeoutMs>${discordReadTimeoutMs}</readTimeoutMs>
+        <maxContentLength>${discordMaxContentLength}</maxContentLength>
     </appender>
 
     <appender name="ASYNC_DISCORD" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="DISCORD" />
+    </appender>
+
+    <appender name="ASYNC_DISCORD_WARN" class="ch.qos.logback.classic.AsyncAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
         <appender-ref ref="DISCORD" />
     </appender>
 
@@ -21,6 +37,9 @@
     <logger name="org.apache.catalina" level="WARN" />
 
     <logger name="com.seal.seal_lab.SealLabApplication" level="WARN" />
+    <logger name="com.seal.seal_lab.audit.member-password" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE" />
+    </logger>
 
     <logger name="com.seal.seal_lab" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE" />
@@ -29,10 +48,6 @@
 
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
-        <appender-ref ref="ASYNC_DISCORD">
-            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-                <level>WARN</level>
-            </filter>
-        </appender-ref>
+        <appender-ref ref="ASYNC_DISCORD_WARN" />
     </root>
 </configuration>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile Edit - SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .profile-page { max-width: 760px; margin: 40px auto 80px; padding: 0 20px; }
+        .profile-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            border: 1px solid #eef2f6;
+        }
+        .profile-card h2 { margin: 0 0 12px; color: #003366; }
+        .profile-card p { color: #607085; line-height: 1.6; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 700; color: #003366; }
+        .form-control, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d3dce6;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font: inherit;
+        }
+        .form-group textarea { min-height: 140px; resize: vertical; }
+        .field-error {
+            margin-top: 6px;
+            color: #b3261e;
+            font-size: 0.85rem;
+        }
+        .readonly-box {
+            padding: 12px;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid #e7edf4;
+            color: #314155;
+            font-weight: 700;
+        }
+        .action-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+        .secondary-link {
+            display: inline-block;
+            padding: 12px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            background: #e8eef5;
+            color: #314155;
+            font-weight: 700;
+        }
+        .primary-btn {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 10px;
+            background: #003366;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .banner {
+            margin: 16px 0;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #effaf2;
+            color: #17633f;
+            border: 1px solid #cfead7;
+        }
+        .current-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid #e7edf4;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='member')}"></header>
+
+<main class="profile-page">
+    <section class="profile-card">
+        <h2 th:text="${editingSelf} ? '내 공개 프로필 편집' : '사용자 공개 프로필 편집'">내 공개 프로필 편집</h2>
+        <p th:if="${editingSelf}">
+            프로필 사진, 학과/소속, 공개용 이메일, 키워드, 소개를 수정할 수 있습니다. 연구실 직급은 관리자만 변경할 수 있습니다.
+        </p>
+        <p th:if="${!editingSelf}">
+            관리자는 사용자 공개 프로필 내용을 수정할 수 있습니다. 직급 변경은 `User 관리` 화면에서 별도로 수행합니다.
+        </p>
+
+        <div th:if="${profileMessage != null}" class="banner" th:text="${profileMessage}">
+            내 프로필을 업데이트했습니다.
+        </div>
+
+        <form th:action="${formAction}" th:object="${userProfileUpdateDto}" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>현재 연구실 직급</label>
+                <div class="readonly-box" th:text="${profileTarget.labRankDisplayName}">일반인</div>
+            </div>
+
+            <div class="form-group">
+                <label for="name">이름</label>
+                <input type="text" th:field="*{name}" class="form-control">
+                <div class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">이름 오류</div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">공개용 이메일</label>
+                <input type="email" th:field="*{email}" class="form-control">
+                <div class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">이메일 오류</div>
+            </div>
+
+            <div class="form-group">
+                <label for="department">학과 / 소속</label>
+                <input type="text" th:field="*{department}" class="form-control">
+                <div class="field-error" th:if="${#fields.hasErrors('department')}" th:errors="*{department}">학과 오류</div>
+            </div>
+
+            <div class="form-group">
+                <label for="keywords">키워드</label>
+                <input type="text" th:field="*{keywords}" class="form-control" placeholder="예: IoT Security, Malware Analysis, Zero Trust">
+                <div class="field-error" th:if="${#fields.hasErrors('keywords')}" th:errors="*{keywords}">키워드 오류</div>
+            </div>
+
+            <div class="form-group">
+                <label for="bio">소개</label>
+                <textarea th:field="*{bio}" placeholder="연구 관심사나 자기소개를 입력하세요."></textarea>
+                <div class="field-error" th:if="${#fields.hasErrors('bio')}" th:errors="*{bio}">소개 오류</div>
+            </div>
+
+            <div class="form-group">
+                <label>프로필 사진</label>
+                <div th:if="${profileTarget.imagePath != null}">
+                    <img th:src="${profileTarget.imagePath}" class="current-image" alt="Current profile image">
+                </div>
+                <input type="file" name="file" class="form-control">
+            </div>
+
+            <div class="action-row">
+                <a th:href="${editingSelf} ? @{/about/member} : @{/admin/users}" class="secondary-link">취소</a>
+                <button type="submit" class="primary-btn">프로필 저장</button>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

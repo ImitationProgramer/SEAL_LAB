@@ -27,10 +27,30 @@ public class User {
 
     private String email;
 
+    @Column(length = 1000)
+    private String bio;
+
+    private String department;
+
+    private String keywords;
+
+    private String imagePath;
+
+    @Enumerated(EnumType.STRING)
+    private LabRank labRank;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    private String provider; // OAuth2용 혹은 기기 식별 정보(User-Agent) 저장용
+    private String provider; // OAuth2 provider 정보 저장용
+
+    private boolean mfaEnabled;
+
+    private String mfaSecret;
+
+    private LocalDateTime mfaEnrolledAt;
+
+    private LocalDateTime passwordChangedAt;
 
     /**
      * [Zero Trust 핵심 필드 1] 실시간 신뢰 점수 (0 ~ 100)
@@ -48,17 +68,54 @@ public class User {
     /**
      * [Zero Trust 핵심 필드 3] 기기 식별용
      */
-    private String lastUserAgent; // 최근 접속 기기 정보
+    private String lastUserAgent; // 최근에 등록된 기기 fingerprint 정보
 
     @PrePersist
     public void prePersist() {
         if (this.trustScore == 0) {
             this.trustScore = 100; // 제로 트러스트의 시작은 통상 '신뢰 상태(100)'에서 감점하는 방식을 권장합니다.
         }
+        if (this.passwordChangedAt == null) {
+            this.passwordChangedAt = LocalDateTime.now();
+        }
+        if (this.labRank == null) {
+            this.labRank = LabRank.GENERAL_PUBLIC;
+        }
     }
 
     public enum Role {
         ADMIN, MEMBER
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public enum LabRank {
+        GENERAL_PUBLIC("일반인", 99),
+        INTERN("인턴", 40),
+        UNDERGRAD_RESEARCHER("학부연구생", 30),
+        MASTER_STUDENT("석사생", 20),
+        PROFESSOR("교수", 10);
+
+        private final String displayName;
+        private final int displayOrder;
+
+        public boolean isVisibleOnMemberPage() {
+            return this == INTERN
+                    || this == UNDERGRAD_RESEARCHER
+                    || this == MASTER_STUDENT;
+        }
+    }
+
+    public LabRank getResolvedLabRank() {
+        return labRank == null ? LabRank.GENERAL_PUBLIC : labRank;
+    }
+
+    public String getLabRankDisplayName() {
+        return getResolvedLabRank().getDisplayName();
+    }
+
+    public boolean isVisibleOnMemberPage() {
+        return getResolvedLabRank().isVisibleOnMemberPage();
     }
 
     // --- 비즈니스 로직 (도메인 주도 설계 방식) ---

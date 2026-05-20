@@ -1,8 +1,11 @@
 package com.seal.seal_lab.infra.config;
 
 import com.seal.seal_lab.infra.security.CustomLogoutSuccessHandler;
+import com.seal.seal_lab.infra.security.AdminMfaEnforcementFilter;
+import com.seal.seal_lab.infra.security.CustomAccessDeniedHandler;
 import com.seal.seal_lab.infra.security.LoginFailureHandler;
 import com.seal.seal_lab.infra.security.LoginSuccessHandler;
+import com.seal.seal_lab.infra.security.PasswordSessionRevocationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +15,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -22,6 +26,9 @@ public class SecurityConfig {
     private final LoginSuccessHandler loginSuccessHandler;
     private final LoginFailureHandler loginFailureHandler;
     private final CustomLogoutSuccessHandler logoutSuccessHandler;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final AdminMfaEnforcementFilter adminMfaEnforcementFilter;
+    private final PasswordSessionRevocationFilter passwordSessionRevocationFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -34,14 +41,21 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/signup", "/about/**", "/publications/**", "/projects/**", "/gallery/**", "/contact/**", "/related/**").permitAll()
+                        .requestMatchers("/admin/**", "/projects/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/mfa/**").authenticated()
+                        .requestMatchers("/trust/**").hasRole("ADMIN")
+                        .requestMatchers("/profile/**").authenticated()
+                        .requestMatchers("/admin/security/**").hasRole("ADMIN")
+                        .requestMatchers("/member/security/**").hasRole("MEMBER")
+                        .requestMatchers("/", "/signup", "/password/**", "/about/**", "/publications/**", "/projects/**", "/gallery/**", "/contact/**", "/related/**").permitAll()
                         .requestMatchers("/css/**", "/images/**", "/js/**", "/favicon.ico", "/uploads/**").permitAll()
-
-                        .requestMatchers("/admin/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/**").authenticated()
 
                         .anyRequest().permitAll()
+                )
+                .exceptionHandling(exception -> exception
+                        .accessDeniedHandler(customAccessDeniedHandler)
                 )
 
                 .formLogin(form -> form
@@ -67,7 +81,9 @@ public class SecurityConfig {
 
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.sameOrigin())
-                );
+                )
+                .addFilterAfter(adminMfaEnforcementFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(passwordSessionRevocationFilter, AdminMfaEnforcementFilter.class);
 
         return http.build();
     }
