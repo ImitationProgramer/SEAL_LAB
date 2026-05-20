@@ -63,11 +63,11 @@ public class LegacyMemberMigrationService {
     }
 
     void promoteProfessorAccountIfNeeded() {
-        userRepository.findByLoginId("jspark").ifPresent(user -> {
+        userRepository.findByLoginId("jspark0427").ifPresent(user -> {
             if (user.getRole() == User.Role.ADMIN && user.getResolvedLabRank() != User.LabRank.PROFESSOR) {
                 user.setLabRank(User.LabRank.PROFESSOR);
                 userRepository.save(user);
-                log.info("[LEGACY-MEMBER-MIGRATION] promoted jspark to PROFESSOR.");
+                log.info("[LEGACY-MEMBER-MIGRATION] promoted jspark0427 to PROFESSOR.");
             }
         });
     }
