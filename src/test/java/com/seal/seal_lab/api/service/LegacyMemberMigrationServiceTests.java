@@ -31,14 +31,14 @@ class LegacyMemberMigrationServiceTests {
     @InjectMocks
     private LegacyMemberMigrationService legacyMemberMigrationService;
 
-    private User jspark;
+    private User bootstrapAdmin;
 
     @BeforeEach
     void setUp() {
-        jspark = User.builder()
-                .loginId("jspark")
+        bootstrapAdmin = User.builder()
+                .loginId("jspark0427")
                 .name("교수")
-                .email("jspark@example.com")
+                .email("jspark0427@example.com")
                 .role(User.Role.ADMIN)
                 .labRank(User.LabRank.GENERAL_PUBLIC)
                 .trustScore(100)
@@ -46,14 +46,14 @@ class LegacyMemberMigrationServiceTests {
     }
 
     @Test
-    void promotesJsparkToProfessorWhenAdmin() {
-        when(userRepository.findByLoginId("jspark")).thenReturn(Optional.of(jspark));
+    void promotesBootstrapAdminToProfessorWhenAdmin() {
+        when(userRepository.findByLoginId("jspark0427")).thenReturn(Optional.of(bootstrapAdmin));
         when(jdbcTemplate.queryForList("SHOW TABLES LIKE 'member'")).thenReturn(List.of());
 
         legacyMemberMigrationService.migrateLegacyMembersIfPresent();
 
-        assertThat(jspark.getLabRank()).isEqualTo(User.LabRank.PROFESSOR);
-        verify(userRepository).save(jspark);
+        assertThat(bootstrapAdmin.getLabRank()).isEqualTo(User.LabRank.PROFESSOR);
+        verify(userRepository).save(bootstrapAdmin);
     }
 
     @Test
@@ -67,7 +67,7 @@ class LegacyMemberMigrationServiceTests {
                 .trustScore(100)
                 .build();
 
-        when(userRepository.findByLoginId("jspark")).thenReturn(Optional.empty());
+        when(userRepository.findByLoginId("jspark0427")).thenReturn(Optional.empty());
         when(jdbcTemplate.queryForList("SHOW TABLES LIKE 'member'"))
                 .thenReturn(List.of(Map.of("Tables_in_seal_lab_db (member)", "member")));
         when(jdbcTemplate.queryForList("SELECT id, name, degree, role, department, email, keywords, image_path FROM member"))
@@ -94,7 +94,7 @@ class LegacyMemberMigrationServiceTests {
 
     @Test
     void skipsLegacyMigrationWhenTableDoesNotExist() {
-        when(userRepository.findByLoginId("jspark")).thenReturn(Optional.empty());
+        when(userRepository.findByLoginId("jspark0427")).thenReturn(Optional.empty());
         when(jdbcTemplate.queryForList("SHOW TABLES LIKE 'member'")).thenReturn(List.of());
 
         legacyMemberMigrationService.migrateLegacyMembersIfPresent();

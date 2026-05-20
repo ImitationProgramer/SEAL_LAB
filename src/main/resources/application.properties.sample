@@ -22,6 +22,8 @@ seal.security.mfa.step-up.validate-request-ip=true
 seal.security.mfa.step-up.validate-fingerprint=true
 seal.security.password-reset.token-ttl-minutes=15
 seal.migration.legacy-member.enabled=true
+admin.initial.enabled=true
+admin.initial.login-id=jspark0427
 # 카카오맵 API 키
 kakao.map.api.key=${KAKAO_MAP_API_KEY}
 admin.initial.password=${ADMIN_INITIAL_PASSWORD}
