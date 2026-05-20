@@ -1,7 +1,9 @@
 package com.seal.seal_lab.infra.security;
 
+import com.seal.seal_lab.infra.web.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -10,8 +12,11 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
+
+    private final ClientIpResolver clientIpResolver;
 
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -19,7 +24,7 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
 
         if (authentication != null && authentication.getName() != null) {
             String loginId = authentication.getName();
-            String ip = request.getRemoteAddr();
+            String ip = clientIpResolver.resolve(request);
 
             // [LOG] 로그아웃 기록
             // 나중에 보안 감사 시 "이 사용자가 언제 나갔는지" 확인하는 용도입니다.

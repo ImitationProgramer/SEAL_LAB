@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>MFA Verify - SEAL LAB</title>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f9; }
+        .wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 32px 16px; box-sizing: border-box; }
+        .card { width: 100%; max-width: 520px; background: white; border-radius: 14px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08); padding: 32px; }
+        h1 { margin: 0 0 10px; font-size: 28px; color: #0f2e4f; }
+        p { color: #5a6472; line-height: 1.6; }
+        .mode-box { margin: 22px 0; padding: 16px; border-radius: 10px; background: #f8fafc; border: 1px solid #dde7f0; }
+        .mode-box strong { color: #003366; }
+        .error { margin-bottom: 16px; padding: 12px 14px; border-radius: 8px; background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; }
+        .input-group { margin-top: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #203040; }
+        input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; border: 1px solid #ccd5df; font-size: 15px; }
+        button { margin-top: 20px; width: 100%; border: none; border-radius: 8px; padding: 14px; background: #003366; color: white; font-size: 16px; font-weight: 700; cursor: pointer; }
+        button:hover { background: #002244; }
+        .hint { font-size: 13px; color: #7b8794; margin-top: 14px; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="card">
+        <h1 th:text="${mode == 'STEP_UP' ? '관리자 Step-up MFA' : '관리자 MFA 인증'}">관리자 MFA 인증</h1>
+        <p><strong th:text="${loginId}">admin</strong> 계정의 추가 인증이 필요합니다.</p>
+
+        <div th:if="${mfaError}" class="error" th:text="${mfaError}">MFA 오류</div>
+
+        <div class="mode-box" th:if="${mode == 'STEP_UP'}">
+            <p>현재 세션의 기본 신뢰 점수는 <strong th:text="${currentScore} + '점'">75점</strong>이며, 이 작업은 <strong th:text="${requiredScore} + '점'">90점</strong> 이상을 요구합니다.</p>
+            <p style="margin-bottom:0;">MFA를 통과하면 DB 점수는 유지한 채, 이 세션에 한해 일시적으로 해당 수준까지 허용됩니다.</p>
+        </div>
+
+        <div class="mode-box" th:if="${mode == 'LOGIN'}">
+            <p>비밀번호 1차 인증은 완료되었습니다. 관리자 세션을 확정하려면 TOTP 기반 MFA를 한 번 더 통과해야 합니다.</p>
+        </div>
+
+        <form th:action="@{/mfa/verify}" method="post">
+            <div class="input-group">
+                <label for="code">6자리 MFA 코드</label>
+                <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" maxlength="6" required>
+            </div>
+            <button type="submit" th:text="${mode == 'STEP_UP' ? '추가 인증 후 계속하기' : 'MFA 인증 완료'}">MFA 인증 완료</button>
+        </form>
+
+        <p class="hint">
+            인증 앱을 사용할 수 없으면 <a th:href="@{/mfa/recovery}" style="color:#003366; text-decoration:none; font-weight:600;">backup code 사용</a>
+        </p>
+
+        <p class="hint" th:if="${mode == 'STEP_UP'}">
+            인증 후 이전 화면으로 돌아갑니다. 차단된 요청이 POST였다면 화면 복귀 후 다시 한 번 실행해야 합니다.
+        </p>
+    </div>
+</div>
+</body>
+</html>

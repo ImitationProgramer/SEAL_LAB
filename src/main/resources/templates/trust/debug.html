@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Trust Debug - SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .trust-page { max-width: 1120px; margin: 40px auto 80px; padding: 0 20px; }
+        .trust-hero { display: grid; grid-template-columns: 1.3fr 0.9fr; gap: 24px; margin-bottom: 28px; }
+        .trust-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            border: 1px solid #eef2f6;
+        }
+        .trust-card h2, .trust-card h3 { margin: 0 0 14px; color: #003366; }
+        .trust-card p { color: #5b6574; line-height: 1.6; }
+        .score-hero {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            margin: 18px 0 8px;
+        }
+        .score-value { font-size: 4rem; font-weight: 800; color: #003366; line-height: 1; }
+        .score-label { font-size: 1rem; color: #687385; }
+        .risk-chip {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            background: #edf4ff;
+            color: #003366;
+        }
+        .allow-chip { background: #ebfff1; color: #17633f; }
+        .deny-chip { background: #fff1f1; color: #b3261e; }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .metric-box {
+            padding: 16px 18px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #e7edf4;
+        }
+        .metric-label { display: block; font-size: 0.82rem; color: #7a8596; margin-bottom: 6px; }
+        .metric-value { font-size: 1.05rem; font-weight: 700; color: #1f2937; word-break: break-word; }
+        .section-title { margin: 30px 0 14px; color: #003366; font-size: 1.05rem; font-weight: 800; }
+        .lookup-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+        .lookup-form input {
+            flex: 1;
+            min-width: 220px;
+            padding: 12px 14px;
+            border: 1px solid #cfd8e3;
+            border-radius: 10px;
+        }
+        .lookup-form button {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            background: #003366;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .lookup-error {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #fff5f5;
+            color: #b3261e;
+            border: 1px solid #ffd6d6;
+        }
+        .operation-banner {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #effaf2;
+            color: #17633f;
+            border: 1px solid #cfead7;
+        }
+        .operation-error {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #fff5f5;
+            color: #b3261e;
+            border: 1px solid #ffd6d6;
+        }
+        .override-form {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #e7edf4;
+        }
+        .baseline-form {
+            margin-top: 14px;
+            padding: 18px;
+            border-radius: 14px;
+            background: #fff8ee;
+            border: 1px solid #f7d9a8;
+        }
+        .override-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .override-row input[type="number"] {
+            width: 140px;
+            padding: 12px 14px;
+            border: 1px solid #cfd8e3;
+            border-radius: 10px;
+        }
+        .override-form textarea,
+        .baseline-form textarea {
+            width: 100%;
+            min-height: 84px;
+            margin-top: 12px;
+            padding: 12px 14px;
+            border: 1px solid #cfd8e3;
+            border-radius: 10px;
+            resize: vertical;
+            font: inherit;
+        }
+        .override-row label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #445065;
+            font-size: 0.95rem;
+        }
+        .muted-note {
+            margin-top: 10px;
+            font-size: 0.88rem;
+            color: #6d7888;
+        }
+        .subtle-button {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            background: #b45309;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        @media (max-width: 900px) {
+            .trust-hero { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='trust')}"></header>
+
+<main class="trust-page">
+    <section class="trust-hero">
+        <div class="trust-card">
+            <span class="risk-chip" th:text="${selfStatus.riskLevel}">Operational</span>
+            <h2>현재 세션 Trust Debug</h2>
+            <p>
+                저장된 평판 점수와 현재 접속 컨텍스트를 분리해서 보여줍니다.
+                이 페이지는 읽기 전용이며 점수를 회복하거나 변경하지 않습니다.
+            </p>
+
+            <div class="score-hero">
+                <div class="score-value" th:text="${selfStatus.evaluatedTrustScore}">90</div>
+                <div class="score-label">현재 요청 기준 예상 점수</div>
+            </div>
+
+            <span class="risk-chip"
+                  th:classappend="${selfStatus.adminActionAllowed} ? ' allow-chip' : ' deny-chip'"
+                  th:text="${selfStatus.adminActionAllowed} ? 'Admin Action Ready' : 'Admin Action Blocked'">
+                Admin Action Ready
+            </span>
+
+            <div class="metric-grid">
+                <div class="metric-box">
+                    <span class="metric-label">loginId / Role</span>
+                    <div class="metric-value" th:text="${selfStatus.loginId} + ' / ' + ${selfStatus.role}">jspark / ADMIN</div>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-label">저장 점수</span>
+                    <div class="metric-value" th:text="${selfStatus.storedTrustScore} + '점'">100점</div>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-label">회복 적용 후 기준점</span>
+                    <div class="metric-value" th:text="${selfStatus.recoveredTrustScore} + '점 (' + ${selfStatus.recoveredPoints} + '점 회복)'">100점 (0점 회복)</div>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-label">마지막 접속 이후 경과</span>
+                    <div class="metric-value" th:text="${selfStatus.minutesSinceLastAccess} + '분'">12분</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="trust-card">
+            <h3>Penalty Breakdown</h3>
+            <div class="metric-grid">
+                <div class="metric-box">
+                    <span class="metric-label">기기 감점</span>
+                    <div class="metric-value" th:text="${selfStatus.devicePenalty} + '점'">10점</div>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-label">이동 감점</span>
+                    <div class="metric-value" th:text="${selfStatus.impossibleTravelPenalty} + '점'">0점</div>
+                </div>
+            </div>
+
+            <div class="section-title">기기 판정</div>
+            <p th:text="${selfStatus.deviceReason}">같은 플랫폼에서 브라우저만 변경되어 경감 감점이 적용됩니다.</p>
+
+            <div class="section-title">이동 판정</div>
+            <p th:text="${selfStatus.impossibleTravelReason}">근거리 이동 또는 짧은 요청 간격으로 판단되어 예외 처리되었습니다.</p>
+        </div>
+    </section>
+
+    <section class="trust-card">
+        <h3>Session Context</h3>
+        <div class="metric-grid">
+            <div class="metric-box">
+                <span class="metric-label">현재 IP</span>
+                <div class="metric-value" th:text="${selfStatus.currentIp}">127.0.0.1</div>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">현재 Fingerprint</span>
+                <div class="metric-value" th:text="${selfStatus.currentFingerprint}">fp:firefox|windows|desktop</div>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">등록 Fingerprint</span>
+                <div class="metric-value" th:text="${selfStatus.registeredFingerprint}">fp:chrome|windows|desktop</div>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">현재 위치</span>
+                <div class="metric-value" th:text="${selfStatus.currentLocation}">37.2758, 127.1325</div>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">마지막 위치</span>
+                <div class="metric-value" th:text="${selfStatus.lastLocation}">37.2758, 127.1325</div>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">마지막 접속 시각</span>
+                <div class="metric-value" th:text="${selfStatus.lastAccessTime}">2026-05-18T11:32:13</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="trust-card" sec:authorize="hasRole('ADMIN')">
+        <h3>Admin Lookup</h3>
+        <p>특정 계정의 저장된 trust 상태만 조회합니다. 이 조회는 대상 사용자의 점수나 fingerprint를 변경하지 않습니다.</p>
+
+        <form class="lookup-form" method="get" th:action="@{/trust/debug}">
+            <input type="text" name="loginId" placeholder="조회할 loginId 입력" th:value="${lookupLoginId}">
+            <button type="submit">상태 조회</button>
+        </form>
+
+        <div th:if="${operationMessage != null}" class="operation-banner" th:text="${operationMessage}">
+            계정의 신뢰 상태를 갱신했습니다.
+        </div>
+        <div th:if="${operationError != null}" class="operation-error" th:text="${operationError}">
+            운영 도구 실행에 실패했습니다.
+        </div>
+        <div th:if="${lookupError != null}" class="lookup-error" th:text="${lookupError}">해당 loginId의 사용자 정보를 찾을 수 없습니다.</div>
+
+        <div style="margin-top: 14px;">
+            <a th:href="@{/mfa/recovery/status}"
+               style="display:inline-block; padding:10px 14px; border-radius:10px; text-decoration:none; background:#365b7d; color:#fff; font-weight:700;">
+                Backup Code 관리
+            </a>
+            <a th:href="@{/admin/security/audit}"
+               style="display:inline-block; margin-left:10px; padding:10px 14px; border-radius:10px; text-decoration:none; background:#1d4d72; color:#fff; font-weight:700;">
+                Security Audit 보기
+            </a>
+            <a th:href="@{/admin/users}"
+               style="display:inline-block; margin-left:10px; padding:10px 14px; border-radius:10px; text-decoration:none; background:#2c5d3f; color:#fff; font-weight:700;">
+                User 관리
+            </a>
+            <a th:href="@{/admin/security/password}"
+               style="display:inline-block; margin-left:10px; padding:10px 14px; border-radius:10px; text-decoration:none; background:#7c2d12; color:#fff; font-weight:700;">
+                관리자 비밀번호 변경
+            </a>
+        </div>
+
+        <div th:if="${lookupStatus != null}">
+            <div class="section-title" th:text="'조회 대상: ' + ${lookupStatus.loginId}">조회 대상: jspark</div>
+            <div style="margin-bottom: 14px;">
+                <a th:href="@{/admin/trust/audit}" style="display:inline-block; padding:10px 14px; border-radius:10px; text-decoration:none; background:#0f4c81; color:#fff; font-weight:700;">
+                    Override Audit 보기
+                </a>
+            </div>
+            <div class="metric-grid">
+                <div class="metric-box">
+                    <span class="metric-label">Role</span>
+                    <div class="metric-value" th:text="${lookupStatus.role}">ADMIN</div>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-label">저장 점수</span>
+                    <div class="metric-value" th:text="${lookupStatus.storedTrustScore} + '점'">90점</div>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-label">회복 적용 시 기준점</span>
+                    <div class="metric-value" th:text="${lookupStatus.recoveredTrustScore} + '점'">92점</div>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-label">등록 Fingerprint</span>
+                    <div class="metric-value" th:text="${lookupStatus.registeredFingerprint}">fp:firefox|windows|desktop</div>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-label">마지막 위치</span>
+                    <div class="metric-value" th:text="${lookupStatus.lastLocation}">37.2758, 127.1325</div>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-label">마지막 접속 시각</span>
+                    <div class="metric-value" th:text="${lookupStatus.lastAccessTime}">2026-05-18T11:32:13</div>
+                </div>
+            </div>
+
+            <form class="override-form" method="post" th:action="@{/admin/trust/override}">
+                <input type="hidden" name="loginId" th:value="${lookupStatus.loginId}">
+                <div class="section-title">운영 도구</div>
+                <div class="override-row">
+                    <input type="number" name="trustScore" min="0" max="100" th:value="${lookupStatus.storedTrustScore}">
+                    <label>
+                        <input type="checkbox" name="clearContext" value="true">
+                        위치와 fingerprint 컨텍스트도 초기화
+                    </label>
+                    <button type="submit">신뢰 상태 적용</button>
+                </div>
+                <textarea name="reason" maxlength="500" placeholder="예: 관리자 잠금 해제 요청 대응, 실검증 전 점수 복구, 오탐 수동 보정" required></textarea>
+                <div class="muted-note">
+                    관리자 95점 이상에서만 실행됩니다. 점수만 조정하거나, 필요 시 저장된 위치/기기 기준선까지 함께 비울 수 있습니다. 운영 사유는 감사 로그에 함께 저장됩니다.
+                </div>
+            </form>
+
+            <form class="baseline-form" method="post" th:action="@{/admin/trust/test-baseline}">
+                <input type="hidden" name="loginId" th:value="${lookupStatus.loginId}">
+                <div class="section-title">테스트 기준선 원클릭 초기화</div>
+                <div class="override-row">
+                    <button type="submit" class="subtle-button">브라우저 테스트 기준선 적용</button>
+                </div>
+                <textarea name="reason" maxlength="500" placeholder="예: jspark 브라우저 교차 테스트 시작 전 baseline 재설정" required></textarea>
+                <div class="muted-note">
+                    `100점 + fp:chrome|windows|desktop + 위치/시간 초기화`를 한 번에 적용합니다. jspark 같은 테스트 계정 실검증 전에 바로 사용할 수 있으며, 사유도 감사 로그에 남습니다.
+                </div>
+            </form>
+
+            <form class="baseline-form" method="post" th:action="@{/admin/mfa/reset}">
+                <input type="hidden" name="loginId" th:value="${lookupStatus.loginId}">
+                <div class="section-title">운영자 MFA Reset</div>
+                <div class="override-row">
+                    <button type="submit" class="subtle-button" style="background:#8b1e3f;">관리자 MFA 초기화</button>
+                </div>
+                <textarea name="reason" maxlength="500" placeholder="예: backup code 소진 및 기기 분실로 운영자 MFA 재등록 필요" required></textarea>
+                <div class="muted-note">
+                    backup code가 모두 없고 MFA 기기를 분실한 최후 수단입니다. 실행 시 대상 계정의 `mfaSecret`, `mfaEnabled`, 기존 `backup code`가 함께 초기화되며, 다음 요청부터 `/mfa/setup`을 다시 거쳐야 합니다.
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+</body>
+</html>

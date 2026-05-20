@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Trust Audit - SEAL LAB</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .audit-page { max-width: 1180px; margin: 40px auto 80px; padding: 0 20px; }
+        .audit-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            border: 1px solid #eef2f6;
+        }
+        .audit-card h2 { margin: 0 0 12px; color: #003366; }
+        .audit-card p { margin: 0 0 20px; color: #607085; line-height: 1.6; }
+        .audit-actions { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+        .audit-link {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            background: #003366;
+            color: #fff;
+            font-weight: 700;
+        }
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+            padding: 16px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #e7edf4;
+        }
+        .filter-form input,
+        .filter-form select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #cfd8e3;
+            border-radius: 10px;
+            background: #fff;
+        }
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-button {
+            padding: 11px 14px;
+            border: none;
+            border-radius: 10px;
+            background: #003366;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .filter-reset {
+            display: inline-block;
+            padding: 11px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            background: #e8eef5;
+            color: #314155;
+            font-weight: 700;
+        }
+        .filter-error {
+            margin-bottom: 18px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #fff5f5;
+            color: #b3261e;
+            border: 1px solid #ffd6d6;
+        }
+        .audit-table-wrap { overflow-x: auto; }
+        .audit-table { width: 100%; border-collapse: collapse; min-width: 920px; }
+        .audit-table th, .audit-table td { padding: 14px 12px; border-bottom: 1px solid #e7edf4; text-align: left; vertical-align: top; }
+        .audit-table th { color: #607085; font-size: 0.85rem; letter-spacing: 0.03em; text-transform: uppercase; }
+        .audit-table td { color: #1f2937; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92rem; }
+        .score-diff { font-weight: 800; color: #003366; }
+        .pill {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            background: #edf4ff;
+            color: #003366;
+        }
+        .pill.warn { background: #fff3e8; color: #b45309; }
+        .empty-state {
+            padding: 36px 20px;
+            border-radius: 16px;
+            background: #f8fafc;
+            border: 1px dashed #d4dde8;
+            text-align: center;
+            color: #607085;
+        }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: headerFragment(activeMenu='trust')}"></header>
+
+<main class="audit-page">
+    <section class="audit-card">
+        <div class="audit-actions">
+            <div>
+                <h2>Trust Override Audit</h2>
+                <p>관리자 운영 도구로 점수 또는 컨텍스트를 변경한 최근 30건의 이력을 보여줍니다.</p>
+            </div>
+            <a class="audit-link" th:href="@{/trust/debug}">Trust Debug로 돌아가기</a>
+        </div>
+
+        <form class="filter-form" method="get" th:action="@{/admin/trust/audit}">
+            <input type="text" name="operator" placeholder="Operator loginId" th:value="${operatorFilter}">
+            <input type="text" name="target" placeholder="Target loginId" th:value="${targetFilter}">
+            <select name="actionType">
+                <option value="" th:selected="${actionTypeFilter == null or actionTypeFilter == ''}">All Actions</option>
+                <option value="MANUAL_OVERRIDE" th:selected="${actionTypeFilter == 'MANUAL_OVERRIDE'}">Manual Override</option>
+                <option value="TEST_BASELINE_RESET" th:selected="${actionTypeFilter == 'TEST_BASELINE_RESET'}">Test Baseline</option>
+            </select>
+            <select name="contextReset">
+                <option value="" th:selected="${contextResetFilter == null or contextResetFilter == ''}">All Context States</option>
+                <option value="CLEARED" th:selected="${contextResetFilter == 'CLEARED'}">Cleared</option>
+                <option value="PRESERVED" th:selected="${contextResetFilter == 'PRESERVED'}">Preserved</option>
+            </select>
+            <input type="date" name="dateFrom" th:value="${dateFromFilter}">
+            <input type="date" name="dateTo" th:value="${dateToFilter}">
+            <div class="filter-actions">
+                <button type="submit" class="filter-button">필터 적용</button>
+                <a class="filter-reset" th:href="@{/admin/trust/audit}">초기화</a>
+            </div>
+        </form>
+
+        <div th:if="${auditFilterError != null}" class="filter-error" th:text="${auditFilterError}">
+            시작일은 종료일보다 늦을 수 없습니다.
+        </div>
+
+        <div th:if="${#lists.isEmpty(auditLogs)}" class="empty-state">
+            검색 조건에 맞는 override 감사 이력이 없습니다.
+        </div>
+
+        <div th:if="${!#lists.isEmpty(auditLogs)}" class="audit-table-wrap">
+            <table class="audit-table">
+                <thead>
+                <tr>
+                    <th>시각</th>
+                    <th>Operator</th>
+                    <th>Target</th>
+                    <th>Action</th>
+                    <th>Score Change</th>
+                    <th>Context Reset</th>
+                    <th>Reason</th>
+                    <th>Previous Fingerprint</th>
+                    <th>Previous Last Access</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="log : ${auditLogs}">
+                    <td class="mono" th:text="${log.createdAt}">2026-05-18T12:00:00</td>
+                    <td th:text="${log.operatorLoginId}">admin</td>
+                    <td th:text="${log.targetLoginId}">jspark</td>
+                    <td>
+                        <span class="pill"
+                              th:classappend="${log.actionType != null and log.actionType.name() == 'TEST_BASELINE_RESET'} ? ' warn' : ''"
+                              th:text="${log.actionType != null and log.actionType.name() == 'TEST_BASELINE_RESET'} ? 'TEST BASELINE' : 'MANUAL OVERRIDE'">MANUAL OVERRIDE</span>
+                    </td>
+                    <td class="score-diff" th:text="${log.previousTrustScore} + ' -> ' + ${log.appliedTrustScore}">75 -> 100</td>
+                    <td>
+                        <span class="pill" th:classappend="${log.clearContext} ? ' warn' : ''"
+                              th:text="${log.clearContext} ? 'Cleared' : 'Preserved'">Preserved</span>
+                    </td>
+                    <td th:text="${log.reason != null ? log.reason : 'none'}">실검증 전 점수 복구</td>
+                    <td class="mono" th:text="${log.previousFingerprint != null ? log.previousFingerprint : 'none'}">fp:chrome|windows|desktop</td>
+                    <td class="mono" th:text="${log.previousLastAccessTime != null ? log.previousLastAccessTime : 'none'}">2026-05-18T11:30:00</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

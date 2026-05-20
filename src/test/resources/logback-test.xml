@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.springframework" level="WARN" />
+    <logger name="org.hibernate" level="WARN" />
+    <logger name="com.zaxxer.hikari" level="WARN" />
+    <logger name="org.apache.catalina" level="WARN" />
+    <logger name="org.springframework.web.client.RestTemplate" level="WARN" />
+
+    <logger name="com.seal.seal_lab" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>

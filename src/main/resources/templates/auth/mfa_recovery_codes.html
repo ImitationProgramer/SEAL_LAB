@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Backup Codes - SEAL LAB</title>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f9; }
+        .wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 32px 16px; box-sizing: border-box; }
+        .card { width: 100%; max-width: 620px; background: white; border-radius: 14px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08); padding: 32px; }
+        h1 { margin: 0 0 10px; font-size: 28px; color: #0f2e4f; }
+        p { color: #5a6472; line-height: 1.6; }
+        .banner { margin: 18px 0; padding: 12px 14px; border-radius: 10px; background: #effaf2; color: #17633f; border: 1px solid #cfead7; }
+        .warning { margin: 22px 0; padding: 16px; border-radius: 10px; background: #fff8e8; border: 1px solid #f6d48b; }
+        .codes { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 24px 0; }
+        .code { padding: 14px 16px; background: #f8fafc; border: 1px solid #dde7f0; border-radius: 10px; font-family: monospace; font-size: 20px; color: #003366; text-align: center; }
+        button { margin-top: 12px; width: 100%; border: none; border-radius: 8px; padding: 14px; background: #003366; color: white; font-size: 16px; font-weight: 700; cursor: pointer; }
+        button:hover { background: #002244; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="card">
+        <h1 th:text="${reissued} ? '관리자 Backup Code 재발급 완료' : '관리자 Backup Code 발급 완료'">관리자 Backup Code 발급 완료</h1>
+        <p><strong th:text="${loginId}">admin</strong> 계정의 1회용 backup code입니다.</p>
+
+        <div th:if="${operationMessage}" class="banner" th:text="${operationMessage}">
+            backup code를 재발급했습니다.
+        </div>
+
+        <div class="warning">
+            <p style="margin:0;" th:if="${reissued}">기존 미사용 backup code는 모두 폐기되었고, 아래 새 코드 세트만 유효합니다. 이 화면을 닫은 뒤에는 다시 평문으로 보여주지 않습니다.</p>
+            <p style="margin:0;" th:if="${!reissued}">이 코드는 인증 앱을 사용할 수 없을 때만 사용합니다. 각 코드는 한 번만 유효하며, 이 화면을 닫은 뒤에는 다시 평문으로 보여주지 않습니다.</p>
+        </div>
+
+        <div class="codes">
+            <div class="code" th:each="code : ${backupCodes}" th:text="${code}">ABCD-EFGH</div>
+        </div>
+
+        <form th:action="@{/mfa/recovery/codes/ack}" method="post">
+            <input type="hidden" name="returnTo" th:value="${ackReturnTo}">
+            <button type="submit" th:text="${reissued} ? '저장 완료, 상태 화면으로 이동' : '저장 완료, 홈으로 이동'">저장 완료, 홈으로 이동</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

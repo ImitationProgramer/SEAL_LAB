@@ -28,6 +28,7 @@
                 <li><a th:href="@{/gallery}" th:classappend="${activeMenu == 'gallery'} ? 'active'">Gallery</a></li>
                 <li><a th:href="@{/contact}" th:classappend="${activeMenu == 'contact'} ? 'active'">Contact</a></li>
                 <li><a th:href="@{/related-site}" th:classappend="${activeMenu == 'related'} ? 'active'">Related Site</a></li>
+                <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/trust/debug}" th:classappend="${activeMenu == 'trust'} ? 'active'">Trust Debug</a></li>
             </ul>
         </nav>
 
@@ -43,6 +44,14 @@
                     <span th:if="${#authorization.expression('hasRole(''MEMBER'')')}" class="role-badge member">MEMBER</span>
                     <span sec:authentication="name">User</span>님
                 </span>
+                <a sec:authorize="hasRole('MEMBER')" th:href="@{/member/security/password}"
+                   style="margin-left:10px; color:#003366; text-decoration:none; font-size:0.85rem; font-weight:700;">
+                    Change Password
+                </a>
+                <a sec:authorize="isAuthenticated()" th:href="@{/profile/me/edit}"
+                   style="margin-left:10px; color:#003366; text-decoration:none; font-size:0.85rem; font-weight:700;">
+                    Edit Profile
+                </a>
                 <form th:action="@{/logout}" method="post" style="display: inline;">
                     <button type="submit" class="logout-btn">Logout</button>
                 </form>

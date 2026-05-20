@@ -13,25 +13,63 @@
         p { color: #666; line-height: 1.6; }
         .btn { display: inline-block; margin-top: 25px; padding: 12px 24px; background: #003366; color: white; text-decoration: none; border-radius: 6px; transition: 0.3s; }
         .btn:hover { background: #002244; }
+        .btn.secondary { background: #c53030; border: none; cursor: pointer; }
+        .btn.secondary:hover { background: #9b2c2c; }
+        .actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 25px; }
+        .step-up-box { margin-top: 20px; padding: 16px; background: #fff8e8; border: 1px solid #f6d48b; border-radius: 8px; text-align: left; }
+        .step-up-box p { margin: 0 0 10px; font-size: 14px; color: #6b4f1d; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="icon">🛡️</div>
-    <h1>Zero Trust Blocked</h1>
-    <p>죄송합니다. 현재 <strong th:text="${userName}">사용자</strong>님의 접속 환경은<br>
+    <h1 th:if="${denialType == 'ROLE'}">Administrator Access Required</h1>
+    <h1 th:if="${denialType == 'TRUST'}">Zero Trust Blocked</h1>
+    <h1 th:if="${denialType != 'ROLE' and denialType != 'TRUST'}">Access Denied</h1>
+
+    <p th:if="${denialType == 'ROLE'}">현재 계정(<strong th:text="${userName}">사용자</strong>)은<br>
+        관리자 기능을 수행할 권한이 없습니다.</p>
+
+    <p th:if="${denialType == 'TRUST'}">죄송합니다. 현재 <strong th:text="${userName}">사용자</strong>님의 접속 환경은<br>
         보안 요구 수준을 충족하지 못했습니다.</p>
 
-    <div class="score-box">
+    <p th:if="${denialType != 'ROLE' and denialType != 'TRUST'}">
+        요청하신 작업을 수행할 수 없습니다. 다시 로그인하거나 권한을 확인해주세요.
+    </p>
+
+    <div class="score-box" th:if="${trustScore != null}">
         <p style="margin:0; font-size: 14px;">현재 분석된 신뢰 점수</p>
         <div class="score-value" th:text="${trustScore} + '점'">75점</div>
     </div>
 
-    <p style="font-size: 13px; color: #999;">
+    <p th:if="${requiredScore != null}" style="font-size: 13px; color: #999;">
+        * 이 기능은 최소 <strong th:text="${requiredScore}">90</strong>점 이상의 신뢰 점수가 필요합니다.
+    </p>
+
+    <p th:if="${denialType == 'TRUST'}" style="font-size: 13px; color: #999;">
         * 외부 네트워크 접속, 미인증 기기 사용, 또는<br>비정상적인 이동 경로 감지 시 차단될 수 있습니다.
     </p>
 
-    <a href="/" class="btn">메인으로 돌아가기</a>
+    <p th:if="${denialType == 'ROLE'}" style="font-size: 13px; color: #999;">
+        * 관리자 계정으로 로그인한 뒤 다시 시도해주세요.
+    </p>
+
+    <p th:if="${errorMessage != null}" style="font-size: 13px; color: #999;" th:text="${errorMessage}">
+        차단 사유
+    </p>
+
+    <div class="step-up-box" th:if="${showStepUpButton}">
+        <p>관리자 계정은 MFA 추가 인증으로 현재 세션에 한해 일시적으로 작업 허용 수준을 받을 수 있습니다.</p>
+        <p>이 인증은 저장된 DB 신뢰 점수를 변경하지 않으며, 짧은 시간 동안만 유지됩니다.</p>
+        <p th:if="${stepUpReturnRequiresRetry}" style="margin-bottom:0;">POST 작업은 인증 후 이전 화면으로 돌아간 뒤 다시 한 번 실행해야 합니다.</p>
+    </div>
+
+    <div class="actions">
+        <form th:if="${showStepUpButton}" th:action="@{/mfa/step-up/start}" method="post" style="display:inline;">
+            <button type="submit" class="btn secondary">MFA 추가 인증으로 계속하기</button>
+        </form>
+        <a href="/" class="btn">메인으로 돌아가기</a>
+    </div>
 </div>
 </body>
 </html>

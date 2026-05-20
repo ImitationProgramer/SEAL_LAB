@@ -19,7 +19,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * 신규 연구원(Member) 등록 로직
+     * 신규 사용자 등록 로직
      * ZTA 원칙: 모든 사용자는 초기 신뢰 상태(Baseline Trust)에서 시작함
      */
     public void register(UserSignupDto dto) {
@@ -36,6 +36,7 @@ public class UserService {
                 .name(dto.getName())
                 .email(dto.getEmail())
                 .role(User.Role.MEMBER)
+                .labRank(User.LabRank.GENERAL_PUBLIC)
                 .trustScore(100) // [ZTA Policy] 초기 가입 시 만점(100) 부여 후 활동에 따라 동적 감점
                 .build();
 
