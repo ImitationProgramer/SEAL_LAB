@@ -3,6 +3,7 @@ package com.seal.seal_lab.api.controller;
 import com.seal.seal_lab.core.entity.Gallery;
 import com.seal.seal_lab.infra.repository.GalleryRepository;
 import com.seal.seal_lab.core.annotation.ZeroTrust; // 어노테이션 임포트
+import com.seal.seal_lab.infra.storage.S3StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -10,10 +11,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
@@ -21,6 +20,7 @@ import java.util.UUID;
 public class GalleryController {
 
     private final GalleryRepository galleryRepository;
+    private final S3StorageService s3StorageService;
 
     /**
      * 갤러리 목록 조회
@@ -41,56 +41,15 @@ public class GalleryController {
     @ZeroTrust(requiredScore = 90)
     public String add(@RequestParam("title") String title,
                       @RequestParam("file") MultipartFile file) throws IOException {
-
-        /**if (!file.isEmpty()) {
-            // [중요] JAR 배포 환경을 고려하여 외부 절대 경로를 사용합니다.
-            // AWS 환경이라면 "/home/ubuntu/uploads/gallery/" 등으로 설정하세요.
-            String uploadDir = "/home/ubuntu/uploads/gallery/";
-
-            File folder = new File(uploadDir);
-            if (!folder.exists()) {
-                folder.mkdirs();
-                log.info("[FILE-SYSTEM] Upload directory created at: {}", uploadDir);
-            }
-
-            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            File destFile = new File(uploadDir, fileName);
-            file.transferTo(destFile);
-
-            Gallery gallery = Gallery.builder()
-                    .title(title)
-                    .imagePath("/uploads/gallery/" + fileName) // DB에는 웹 접근 경로 저장
-                    .uploadDate(LocalDateTime.now())
-                    .build();
-
-            galleryRepository.save(gallery);
-            log.info("[GALLERY-ADD] New image uploaded by admin. Title: {}", title);
-        }**/
         if (!file.isEmpty()) {
-            // [Local Path] 주현님의 로컬 절대 경로로 설정
-            String uploadDir = "/Users/leejoohyun/IdeaProjects/SEAL_LAB/src/main/resources/static/images/";
-
-            File folder = new File(uploadDir);
-            if (!folder.exists()) {
-                folder.mkdirs();
-                log.info("[LOCAL-SYSTEM] 폴더가 없어 생성했습니다: {}", uploadDir);
-            }
-
-            // 파일명 중복 방지를 위한 UUID 생성
-            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            File destFile = new File(uploadDir, fileName);
-            file.transferTo(destFile);
-
-            // DB 저장 로직
             Gallery gallery = Gallery.builder()
                     .title(title)
-                    // static 폴더는 웹상에서 루트(/)로 잡히므로 경로를 아래와 같이 저장합니다.
-                    .imagePath("/images/" + fileName)
+                    .imagePath(s3StorageService.uploadGalleryImage(file))
                     .uploadDate(LocalDateTime.now())
                     .build();
 
             galleryRepository.save(gallery);
-            log.info("[GALLERY-ADD] 로컬 경로 업로드 완료. 점수 검증 통과. Title: {}", title);
+            log.info("[GALLERY-ADD] S3 업로드 완료. 점수 검증 통과. Title: {}", title);
         }
         return "redirect:/gallery";
     }
@@ -102,6 +61,9 @@ public class GalleryController {
     @PostMapping("/admin/gallery/delete/{id}")
     @ZeroTrust(requiredScore = 95)
     public String delete(@PathVariable Long id) {
+        galleryRepository.findById(id)
+                .map(Gallery::getImagePath)
+                .ifPresent(s3StorageService::deleteByUrl);
         galleryRepository.deleteById(id);
         log.warn("[GALLERY-DELETE] Image ID: {} deleted from gallery.", id);
         return "redirect:/gallery";
